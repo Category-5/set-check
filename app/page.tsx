@@ -78,10 +78,10 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-12">
+    <main className="min-h-screen bg-background flex flex-col items-center">
+      <div className="w-full max-w-4xl px-4 py-12">
         {/* Header */}
-        <header className="mb-12">
+        <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-2">Set Check</h1>
           <p className="text-muted-foreground">
             Create and share playlists with friends. No account needed.
@@ -89,15 +89,17 @@ export default function HomePage() {
         </header>
 
         {/* Create New Playlist Button */}
-        <Button
-          onClick={createNewPlaylist}
-          disabled={isCreating}
-          size="lg"
-          className="mb-12 gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          {isCreating ? "Creating..." : "Create New Playlist"}
-        </Button>
+        <div className="flex justify-center mb-12">
+          <Button
+            onClick={createNewPlaylist}
+            disabled={isCreating}
+            size="lg"
+            className="gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            {isCreating ? "Creating..." : "Create New Playlist"}
+          </Button>
+        </div>
 
         {/* Recent Playlists Section */}
         {recentPlaylists.length > 0 && (
