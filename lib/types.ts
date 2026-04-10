@@ -32,7 +32,18 @@ export interface Playlist {
   updated_at: string
 }
 
+// Transformed response from our search-song API
 export interface OdesliResponse {
+  title: string
+  artistName: string
+  album?: string | null
+  thumbnailUrl: string | null
+  platformLinks: Record<string, string>
+  odesliUrl?: string | null
+}
+
+// Raw Odesli API response (for reference)
+export interface RawOdesliResponse {
   entityUniqueId: string
   userCountry: string
   pageUrl: string

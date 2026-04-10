@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
         playlist_id: playlistId,
         title: odesliData.title,
         artist: odesliData.artistName,
+        album: odesliData.album || null,
         thumbnail_url: odesliData.thumbnailUrl,
         platform_links: odesliData.platformLinks,
-        odesli_url: odesliData.odesliUrl,
         position,
       })
       .select()
