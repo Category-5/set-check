@@ -11,6 +11,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -53,7 +54,13 @@ export function SongList({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -130,7 +137,7 @@ export function SongList({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={songs} strategy={verticalListSortingStrategy}>
+        <SortableContext items={songs.map(s => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {songs.map((song, index) => (
               <SongItem
