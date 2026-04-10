@@ -8,6 +8,7 @@ import { AddSongDialog } from "./add-song-dialog"
 import { ShareDialog } from "./share-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import type { Playlist, Song } from "@/lib/types"
+import { ArrowUp } from "lucide-react"
 
 interface PlaylistViewProps {
   playlist: Playlist
@@ -22,7 +23,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [currentUser, setCurrentUser] = useState<string | null>(null)
 
   useEffect(() => {
-    const storedName = sessionStorage.getItem("setcheck_username")
+    const storedName = localStorage.getItem("setcheck_username")
     if (storedName) {
       setCurrentUser(storedName)
     }
@@ -124,8 +125,15 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
         </div>
       </div>
 
+      {/* Arrow indicator */}
+      <div className="mt-8 flex justify-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-muted-foreground/30 bg-card">
+          <ArrowUp className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </div>
+
       {/* Ideas sections - grouped by person */}
-      <div className="mt-10">
+      <div className="mt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-foreground">Ideas</h2>
           <button

@@ -22,6 +22,15 @@ export async function GET(request: NextRequest) {
     )
 
     if (!response.ok) {
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "Too many requests. Please wait a moment and try again." },
+          { status: 429 }
+        )
+      }
+      
       return NextResponse.json(
         { error: "Could not find song. Make sure you pasted a valid music link." },
         { status: 404 }

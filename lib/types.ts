@@ -29,7 +29,7 @@ export interface Playlist {
   id: string
   name: string
   description: string | null
-  image_url: string | null
+  cover_url: string | null
   created_at: string
   updated_at: string
 }

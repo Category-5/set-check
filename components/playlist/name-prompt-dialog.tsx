@@ -21,7 +21,7 @@ export function NamePromptDialog({ onNameSet }: NamePromptDialogProps) {
   const [name, setName] = useState("")
 
   useEffect(() => {
-    const storedName = sessionStorage.getItem("setcheck_username")
+    const storedName = localStorage.getItem("setcheck_username")
     if (!storedName) {
       setOpen(true)
     }
@@ -30,7 +30,7 @@ export function NamePromptDialog({ onNameSet }: NamePromptDialogProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (name.trim()) {
-      sessionStorage.setItem("setcheck_username", name.trim())
+      localStorage.setItem("setcheck_username", name.trim())
       onNameSet(name.trim())
       setOpen(false)
     }
