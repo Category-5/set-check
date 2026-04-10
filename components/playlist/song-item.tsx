@@ -77,10 +77,13 @@ export function SongItem({ song, index, onRemove, onClick, onNoteClick }: SongIt
         <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
       </button>
 
-      {/* Added At */}
-      <span className="hidden sm:block text-xs text-muted-foreground">
-        {formatDistanceToNow(new Date(song.added_at), { addSuffix: true })}
-      </span>
+      {/* Added By & At */}
+      <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground">
+        {song.added_by && (
+          <span className="font-medium">{song.added_by}</span>
+        )}
+        <span>{formatDistanceToNow(new Date(song.added_at), { addSuffix: true })}</span>
+      </div>
 
       {/* Note Indicator */}
       <Button

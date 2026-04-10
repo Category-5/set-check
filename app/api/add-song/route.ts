@@ -6,10 +6,11 @@ import { nanoid } from "nanoid"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { playlistId, position, odesliData } = body as {
+    const { playlistId, position, odesliData, addedBy } = body as {
       playlistId: string
       position: number
       odesliData: OdesliResponse
+      addedBy?: string | null
     }
 
     if (!playlistId || position === undefined || !odesliData) {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create the song
+    // Create the song - new songs start in Ideas (is_promoted = false)
     const songData = {
       id: nanoid(10),
       playlist_id: playlistId,
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
       thumbnail_url: odesliData.thumbnailUrl,
       platform_links: odesliData.platformLinks,
       position,
+      added_by: addedBy || null,
+      is_promoted: false,
     }
     
     console.log("[v0] Adding song with data:", JSON.stringify(songData, null, 2))

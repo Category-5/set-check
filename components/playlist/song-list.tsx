@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { SongItem } from "./song-item"
 import { PlatformLinksDialog } from "./platform-links-dialog"
 import { NoteDialog } from "./note-dialog"
@@ -30,7 +28,8 @@ interface SongListProps {
   onSongRemoved: (songId: string) => void
   onSongsReordered: (songs: Song[]) => void
   onSongUpdated: (song: Song) => void
-  onAddSongClick: () => void
+  onAddSongClick?: () => void
+  showAddButton?: boolean
 }
 
 export function SongList({
@@ -40,6 +39,7 @@ export function SongList({
   onSongsReordered,
   onSongUpdated,
   onAddSongClick,
+  showAddButton = true,
 }: SongListProps) {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [isPlatformDialogOpen, setIsPlatformDialogOpen] = useState(false)
@@ -115,34 +115,11 @@ export function SongList({
   }
 
   if (songs.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
-          <Plus className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          No songs yet
-        </h3>
-        <p className="text-muted-foreground mb-4">
-          Add your first song to get started
-        </p>
-        <Button onClick={onAddSongClick} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Song
-        </Button>
-      </div>
-    )
+    return null
   }
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-foreground">Songs</h2>
-        <Button onClick={onAddSongClick} size="sm" className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Song
-        </Button>
-      </div>
 
       <DndContext
         sensors={sensors}
@@ -174,7 +151,7 @@ export function SongList({
       <NoteDialog
         open={isNoteDialogOpen}
         onOpenChange={setIsNoteDialogOpen}
-        song={selectedSong}
+        note={selectedSong?.note || ""}
         onSave={handleNoteSave}
       />
     </>

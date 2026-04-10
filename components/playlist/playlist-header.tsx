@@ -80,7 +80,7 @@ export function PlaylistHeader({
 
       if (response.ok) {
         const { url } = await response.json()
-        onPlaylistUpdated({ cover_url: url })
+        onPlaylistUpdated({ image_url: url })
       }
     } catch (error) {
       console.error("Upload error:", error)
@@ -94,9 +94,9 @@ export function PlaylistHeader({
       {/* Cover Image */}
       <div className="relative group shrink-0">
         <div className="w-48 h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl">
-          {playlist.cover_url ? (
+          {playlist.image_url ? (
             <img
-              src={playlist.cover_url}
+              src={playlist.image_url}
               alt={playlist.name}
               className="w-full h-full object-cover"
               crossOrigin="anonymous"
@@ -123,8 +123,8 @@ export function PlaylistHeader({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
-          Playlist
+        <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">
+          Set Check
         </p>
 
         {/* Name */}

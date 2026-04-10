@@ -17,6 +17,7 @@ interface AddSongDialogProps {
   onOpenChange: (open: boolean) => void
   playlistId: string
   currentPosition: number
+  currentUser: string | null
   onSongAdded: (song: Song) => void
 }
 
@@ -25,6 +26,7 @@ export function AddSongDialog({
   onOpenChange,
   playlistId,
   currentPosition,
+  currentUser,
   onSongAdded,
 }: AddSongDialogProps) {
   const [query, setQuery] = useState("")
@@ -69,6 +71,7 @@ export function AddSongDialog({
           playlistId,
           position: currentPosition,
           odesliData: searchResult,
+          addedBy: currentUser,
         }),
       })
 
