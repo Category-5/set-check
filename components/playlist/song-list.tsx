@@ -26,6 +26,7 @@ interface SongListProps {
   songs: Song[]
   playlistId: string
   currentUser: string | null
+  isCreator?: boolean
   onSongRemoved: (songId: string) => void
   onSongsReordered: (songs: Song[]) => void
   onSongUpdated: (song: Song) => void
@@ -37,6 +38,7 @@ export function SongList({
   songs,
   playlistId,
   currentUser,
+  isCreator = false,
   onSongRemoved,
   onSongsReordered,
   onSongUpdated,
@@ -136,6 +138,7 @@ export function SongList({
                 song={song}
                 index={index}
                 currentUser={currentUser}
+                isCreator={isCreator}
                 onRemove={() => handleRemoveSong(song.id)}
                 onClick={() => handleSongClick(song)}
                 onNoteClick={() => handleNoteClick(song)}

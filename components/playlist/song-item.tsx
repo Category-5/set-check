@@ -23,12 +23,13 @@ interface SongItemProps {
   song: Song
   index: number
   currentUser: string | null
+  isCreator?: boolean
   onRemove: () => void
   onClick: () => void
   onNoteClick: () => void
 }
 
-export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteClick }: SongItemProps) {
+export function SongItem({ song, index, currentUser, isCreator = false, onRemove, onClick, onNoteClick }: SongItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
   const {
@@ -123,18 +124,20 @@ export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteCl
             )}
           </Button>
 
-          {/* Remove */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowDeleteConfirm(true)
-            }}
-            className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {/* Remove - only shown to creator */}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteConfirm(true)
+              }}
+              className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -159,18 +162,20 @@ export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteCl
           )}
         </Button>
 
-        {/* Remove */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation()
-            setShowDeleteConfirm(true)
-          }}
-          className="shrink-0 text-muted-foreground hover:text-destructive"
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        {/* Remove - only shown to creator */}
+        {isCreator && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowDeleteConfirm(true)
+            }}
+            className="shrink-0 text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       {/* Delete Confirmation */}

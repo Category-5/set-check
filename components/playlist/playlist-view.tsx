@@ -58,6 +58,12 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
     }
   }, [playlist.id, playlist.name, playlist.cover_url])
 
+  // Check if current user is the playlist creator
+  const isCreator = useMemo(() => 
+    currentUser !== null && playlist.created_by !== null && currentUser === playlist.created_by,
+    [currentUser, playlist.created_by]
+  )
+
   // Separate promoted songs (the Set) from ideas
   const promotedSongs = useMemo(() => 
     songs.filter((s) => s.is_promoted).sort((a, b) => a.position - b.position),
@@ -141,6 +147,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
             songs={promotedSongs}
             playlistId={playlist.id}
             currentUser={currentUser}
+            isCreator={isCreator}
             onSongRemoved={handleSongRemoved}
             onSongsReordered={handleSongsReordered}
             onSongUpdated={handleSongUpdated}
@@ -177,6 +184,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           ideasByPerson={ideasByPerson}
           playlistId={playlist.id}
           currentUser={currentUser}
+          isCreator={isCreator}
           onSongRemoved={handleSongRemoved}
           onSongUpdated={handleSongUpdated}
           onSongPromoted={handleSongPromoted}

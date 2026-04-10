@@ -30,6 +30,7 @@ interface IdeaSongItemProps {
   song: Song
   playlistId: string
   currentUser: string | null
+  isCreator?: boolean
   onSongRemoved: (songId: string) => void
   onSongUpdated: (song: Song) => void
   onSongPromoted: (song: Song) => void
@@ -39,6 +40,7 @@ export function IdeaSongItem({
   song,
   playlistId,
   currentUser,
+  isCreator = false,
   onSongRemoved,
   onSongUpdated,
   onSongPromoted,
@@ -158,17 +160,19 @@ export function IdeaSongItem({
           )}
         </button>
 
-        {/* Promote button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePromote}
-          disabled={isPromoting}
-          className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          <ArrowUp className="h-4 w-4" />
-          <span className="hidden sm:inline">Promote</span>
-        </Button>
+        {/* Promote button - only shown to creator */}
+        {isCreator && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePromote}
+            disabled={isPromoting}
+            className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <ArrowUp className="h-4 w-4" />
+            <span className="hidden sm:inline">Promote</span>
+          </Button>
+        )}
 
         {/* More options */}
         <DropdownMenu>
@@ -186,10 +190,12 @@ export function IdeaSongItem({
               <MessageCircle className="mr-2 h-4 w-4" />
               {song.note ? "Edit note" : "Add note"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Remove
-            </DropdownMenuItem>
+            {isCreator && (
+              <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Remove
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -41,11 +41,13 @@ export default function HomePage() {
     setIsCreating(true)
     const supabase = createClient()
     const playlistId = nanoid(10)
+    const username = localStorage.getItem("setcheck_username")
 
     const { error } = await supabase.from("playlists").insert({
       id: playlistId,
       name: "My Playlist",
       description: "A collaborative playlist",
+      created_by: username,
     })
 
     if (!error) {
