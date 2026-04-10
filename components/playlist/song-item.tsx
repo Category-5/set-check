@@ -65,8 +65,8 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
           <GripVertical className="w-5 h-5" />
         </button>
 
-        {/* Index */}
-        <span className="w-6 text-center text-sm text-muted-foreground">
+        {/* Index - Hidden on mobile */}
+        <span className="hidden sm:block w-6 text-center text-sm text-muted-foreground">
           {index + 1}
         </span>
 
