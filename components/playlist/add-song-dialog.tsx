@@ -137,7 +137,7 @@ export function AddSongDialog({
           )}
 
           {searchResult && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary overflow-hidden">
               <div className="shrink-0 w-14 h-14 rounded bg-muted flex items-center justify-center overflow-hidden">
                 {searchResult.thumbnailUrl ? (
                   <img
@@ -150,11 +150,11 @@ export function AddSongDialog({
                   <Music className="w-6 h-6 text-muted-foreground" />
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <p className="font-medium text-foreground truncate max-w-full">
                   {searchResult.title}
                 </p>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground truncate max-w-full">
                   {searchResult.artistName}
                 </p>
               </div>
