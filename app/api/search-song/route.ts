@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    console.log("[v0] Searching for song with URL:", url)
+    
     const response = await fetch(
       `${ODESLI_API}?url=${encodeURIComponent(url)}&userCountry=US`,
       {
@@ -21,7 +23,11 @@ export async function GET(request: NextRequest) {
       }
     )
 
+    console.log("[v0] Odesli API response status:", response.status)
+
     if (!response.ok) {
+      const errorText = await response.text()
+      console.log("[v0] Odesli API error response:", errorText)
       return NextResponse.json(
         { error: "Could not find song. Make sure you pasted a valid music link." },
         { status: 404 }
