@@ -190,12 +190,10 @@ export function IdeaSongItem({
               <MessageCircle className="mr-2 h-4 w-4" />
               {song.note ? "Edit note" : "Add note"}
             </DropdownMenuItem>
-            {isCreator && (
-              <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                Remove
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Remove
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
