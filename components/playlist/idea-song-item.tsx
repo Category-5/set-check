@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowUp, Music, MoreHorizontal, Trash2, StickyNote, ExternalLink } from "lucide-react"
+import { ArrowUp, Music, MoreHorizontal, Trash2, MessageCircle, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -10,6 +10,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { PlatformLinksDialog } from "./platform-links-dialog"
 import { NoteDialog } from "./note-dialog"
 import { VoteButtons } from "./vote-buttons"
@@ -36,6 +46,7 @@ export function IdeaSongItem({
   const [isLinksOpen, setIsLinksOpen] = useState(false)
   const [isNoteOpen, setIsNoteOpen] = useState(false)
   const [isPromoting, setIsPromoting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const supabase = createClient()
 
   const handlePromote = async () => {
@@ -136,15 +147,16 @@ export function IdeaSongItem({
         <VoteButtons songId={song.id} currentUser={currentUser} />
 
         {/* Note indicator */}
-        {song.note && (
-          <button
-            onClick={() => setIsNoteOpen(true)}
-            className="rounded-full p-1 text-primary hover:bg-primary/10"
-            title="Has note"
-          >
-            <StickyNote className="h-4 w-4" />
-          </button>
-        )}
+        <button
+          onClick={() => setIsNoteOpen(true)}
+          className={`relative rounded-full p-1 hover:bg-primary/10 ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
+          title={song.note ? "Has note" : "Add note"}
+        >
+          <MessageCircle className="h-4 w-4" />
+          {song.note && (
+            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary" />
+          )}
+        </button>
 
         {/* Promote button */}
         <Button
@@ -171,16 +183,34 @@ export function IdeaSongItem({
               Open links
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
-              <StickyNote className="mr-2 h-4 w-4" />
+              <MessageCircle className="mr-2 h-4 w-4" />
               {song.note ? "Edit note" : "Add note"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+            <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
               <Trash2 className="mr-2 h-4 w-4" />
               Remove
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove song?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove &quot;{song.title}&quot; from your ideas? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PlatformLinksDialog
         open={isLinksOpen}

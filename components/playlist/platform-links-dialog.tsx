@@ -42,7 +42,7 @@ export function PlatformLinksDialog({ open, onOpenChange, song }: PlatformLinksD
           <DialogTitle>Listen on</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 overflow-hidden">
           <div className="shrink-0 w-16 h-16 rounded bg-secondary flex items-center justify-center overflow-hidden">
             {song.thumbnail_url ? (
               <img
@@ -55,9 +55,9 @@ export function PlatformLinksDialog({ open, onOpenChange, song }: PlatformLinksD
               <Music className="w-8 h-8 text-muted-foreground" />
             )}
           </div>
-          <div className="min-w-0">
-            <p className="font-semibold text-foreground truncate">{song.title}</p>
-            <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <p className="font-semibold text-foreground truncate max-w-full">{song.title}</p>
+            <p className="text-sm text-muted-foreground truncate max-w-full">{song.artist}</p>
           </div>
         </div>
 

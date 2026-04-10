@@ -1,7 +1,18 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { GripVertical, Trash2, StickyNote, Music } from "lucide-react"
+import { GripVertical, Trash2, MessageCircle, Music } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { formatDistanceToNow } from "date-fns"
@@ -18,6 +29,8 @@ interface SongItemProps {
 }
 
 export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteClick }: SongItemProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  
   const {
     attributes,
     listeners,
@@ -98,9 +111,12 @@ export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteCl
           e.stopPropagation()
           onNoteClick()
         }}
-        className={`shrink-0 ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
+        className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
       >
-        <StickyNote className="w-4 h-4" />
+        <MessageCircle className="w-4 h-4" />
+        {song.note && (
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+        )}
       </Button>
 
       {/* Remove */}
@@ -109,12 +125,30 @@ export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteCl
         size="icon"
         onClick={(e) => {
           e.stopPropagation()
-          onRemove()
+          setShowDeleteConfirm(true)
         }}
         className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
       >
         <Trash2 className="w-4 h-4" />
       </Button>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove song?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove &quot;{song.title}&quot; from the playlist? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
