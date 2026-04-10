@@ -43,16 +43,24 @@ export function AddSongDialog({
     setSearchResult(null)
 
     try {
-      const response = await fetch(`/api/search-song?url=${encodeURIComponent(query.trim())}`)
+      const searchUrl = query.trim()
+      console.log("[v0] Client: searching for URL:", searchUrl)
+      
+      const response = await fetch(`/api/search-song?url=${encodeURIComponent(searchUrl)}`)
+      
+      console.log("[v0] Client: response status:", response.status)
       
       if (!response.ok) {
         const data = await response.json()
+        console.log("[v0] Client: error response:", data)
         throw new Error(data.error || "Failed to find song")
       }
 
       const data = await response.json()
+      console.log("[v0] Client: success response:", data)
       setSearchResult(data)
     } catch (err) {
+      console.log("[v0] Client: caught error:", err)
       setError(err instanceof Error ? err.message : "Failed to find song")
     } finally {
       setIsSearching(false)
