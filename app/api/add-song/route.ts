@@ -36,18 +36,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the song
+    const songData = {
+      id: nanoid(10),
+      playlist_id: playlistId,
+      title: odesliData.title,
+      artist: odesliData.artistName,
+      album: odesliData.album || null,
+      thumbnail_url: odesliData.thumbnailUrl,
+      platform_links: odesliData.platformLinks,
+      position,
+    }
+    
+    console.log("[v0] Adding song with data:", JSON.stringify(songData, null, 2))
+    
     const { data: song, error: songError } = await supabase
       .from("songs")
-      .insert({
-        id: nanoid(10),
-        playlist_id: playlistId,
-        title: odesliData.title,
-        artist: odesliData.artistName,
-        album: odesliData.album || null,
-        thumbnail_url: odesliData.thumbnailUrl,
-        platform_links: odesliData.platformLinks,
-        position,
-      })
+      .insert(songData)
       .select()
       .single()
 
