@@ -102,11 +102,11 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
       <div className="mt-8">
         <div className="mb-4 flex items-center gap-3">
           <h2 className="text-xl font-bold text-foreground">The Set</h2>
-          <span className="rounded-full bg-primary/20 px-3 py-1 text-sm font-medium text-primary">
+          <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
             {promotedSongs.length} {promotedSongs.length === 1 ? "song" : "songs"}
           </span>
         </div>
-        <div className="rounded-xl border border-border bg-card/50 p-4">
+        <div className="rounded-xl border-2 border-orange-500 bg-card/50 p-4">
           <SongList
             songs={promotedSongs}
             playlistId={playlist.id}
