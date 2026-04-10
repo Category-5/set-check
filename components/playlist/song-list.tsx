@@ -11,6 +11,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -26,6 +27,7 @@ interface SongListProps {
   songs: Song[]
   playlistId: string
   currentUser: string | null
+  isCreator?: boolean
   onSongRemoved: (songId: string) => void
   onSongsReordered: (songs: Song[]) => void
   onSongUpdated: (song: Song) => void
@@ -37,6 +39,7 @@ export function SongList({
   songs,
   playlistId,
   currentUser,
+  isCreator = false,
   onSongRemoved,
   onSongsReordered,
   onSongUpdated,
@@ -51,7 +54,13 @@ export function SongList({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -128,7 +137,7 @@ export function SongList({
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={songs} strategy={verticalListSortingStrategy}>
+        <SortableContext items={songs.map(s => s.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
             {songs.map((song, index) => (
               <SongItem
@@ -136,6 +145,7 @@ export function SongList({
                 song={song}
                 index={index}
                 currentUser={currentUser}
+                isCreator={isCreator}
                 onRemove={() => handleRemoveSong(song.id)}
                 onClick={() => handleSongClick(song)}
                 onNoteClick={() => handleNoteClick(song)}

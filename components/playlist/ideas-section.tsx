@@ -8,6 +8,7 @@ interface IdeasSectionProps {
   ideasByPerson: Record<string, Song[]>
   playlistId: string
   currentUser: string | null
+  isCreator?: boolean
   onSongRemoved: (songId: string) => void
   onSongUpdated: (song: Song) => void
   onSongPromoted: (song: Song) => void
@@ -17,6 +18,7 @@ export function IdeasSection({
   ideasByPerson,
   playlistId,
   currentUser,
+  isCreator = false,
   onSongRemoved,
   onSongUpdated,
   onSongPromoted,
@@ -63,6 +65,7 @@ export function IdeasSection({
                 song={song}
                 playlistId={playlistId}
                 currentUser={currentUser}
+                isCreator={isCreator}
                 onSongRemoved={onSongRemoved}
                 onSongUpdated={onSongUpdated}
                 onSongPromoted={onSongPromoted}
