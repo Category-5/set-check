@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Share2, Music, ImagePlus, Check, X, Pencil } from "lucide-react"
+import { ExternalLink, Music, ImagePlus, Check, X, Pencil } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Playlist } from "@/lib/types"
 
@@ -218,9 +218,8 @@ export function PlaylistHeader({
           <span className="text-sm text-muted-foreground">
             {songCount} {songCount === 1 ? "song" : "songs"}
           </span>
-          <Button onClick={onShareClick} className="gap-2">
-            <Share2 className="w-4 h-4" />
-            Share
+          <Button onClick={onShareClick} size="icon" className="rounded-full h-10 w-10">
+            <ExternalLink className="w-5 h-5" />
           </Button>
         </div>
       </div>
