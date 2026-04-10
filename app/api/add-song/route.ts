@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import type { OdesliResponse } from "@/lib/types"
+import { nanoid } from "nanoid"
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     const { data: song, error: songError } = await supabase
       .from("songs")
       .insert({
+        id: nanoid(10),
         playlist_id: playlistId,
         title: odesliData.title,
         artist: odesliData.artistName,
