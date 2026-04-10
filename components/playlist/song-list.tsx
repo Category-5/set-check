@@ -25,6 +25,7 @@ import {
 interface SongListProps {
   songs: Song[]
   playlistId: string
+  currentUser: string | null
   onSongRemoved: (songId: string) => void
   onSongsReordered: (songs: Song[]) => void
   onSongUpdated: (song: Song) => void
@@ -35,6 +36,7 @@ interface SongListProps {
 export function SongList({
   songs,
   playlistId,
+  currentUser,
   onSongRemoved,
   onSongsReordered,
   onSongUpdated,
@@ -133,6 +135,7 @@ export function SongList({
                 key={song.id}
                 song={song}
                 index={index}
+                currentUser={currentUser}
                 onRemove={() => handleRemoveSong(song.id)}
                 onClick={() => handleSongClick(song)}
                 onNoteClick={() => handleNoteClick(song)}

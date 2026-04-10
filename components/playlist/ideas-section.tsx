@@ -62,6 +62,7 @@ export function IdeasSection({
                 key={song.id}
                 song={song}
                 playlistId={playlistId}
+                currentUser={currentUser}
                 onSongRemoved={onSongRemoved}
                 onSongUpdated={onSongUpdated}
                 onSongPromoted={onSongPromoted}

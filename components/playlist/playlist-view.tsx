@@ -110,6 +110,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           <SongList
             songs={promotedSongs}
             playlistId={playlist.id}
+            currentUser={currentUser}
             onSongRemoved={handleSongRemoved}
             onSongsReordered={handleSongsReordered}
             onSongUpdated={handleSongUpdated}

@@ -5,17 +5,19 @@ import { GripVertical, Trash2, StickyNote, Music } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { formatDistanceToNow } from "date-fns"
+import { VoteButtons } from "./vote-buttons"
 import type { Song } from "@/lib/types"
 
 interface SongItemProps {
   song: Song
   index: number
+  currentUser: string | null
   onRemove: () => void
   onClick: () => void
   onNoteClick: () => void
 }
 
-export function SongItem({ song, index, onRemove, onClick, onNoteClick }: SongItemProps) {
+export function SongItem({ song, index, currentUser, onRemove, onClick, onNoteClick }: SongItemProps) {
   const {
     attributes,
     listeners,
@@ -84,6 +86,9 @@ export function SongItem({ song, index, onRemove, onClick, onNoteClick }: SongIt
         )}
         <span>{formatDistanceToNow(new Date(song.added_at), { addSuffix: true })}</span>
       </div>
+
+      {/* Vote Buttons */}
+      <VoteButtons songId={song.id} currentUser={currentUser} />
 
       {/* Note Indicator */}
       <Button

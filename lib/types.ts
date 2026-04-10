@@ -34,6 +34,14 @@ export interface Playlist {
   updated_at: string
 }
 
+export interface Vote {
+  id: string
+  song_id: string
+  user_name: string
+  vote_type: 'up' | 'down'
+  created_at: string
+}
+
 // Transformed response from our search-song API
 export interface OdesliResponse {
   title: string

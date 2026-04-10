@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { PlatformLinksDialog } from "./platform-links-dialog"
 import { NoteDialog } from "./note-dialog"
+import { VoteButtons } from "./vote-buttons"
 import { createClient } from "@/lib/supabase/client"
 import type { Song } from "@/lib/types"
 
 interface IdeaSongItemProps {
   song: Song
   playlistId: string
+  currentUser: string | null
   onSongRemoved: (songId: string) => void
   onSongUpdated: (song: Song) => void
   onSongPromoted: (song: Song) => void
@@ -26,6 +28,7 @@ interface IdeaSongItemProps {
 export function IdeaSongItem({
   song,
   playlistId,
+  currentUser,
   onSongRemoved,
   onSongUpdated,
   onSongPromoted,
@@ -128,6 +131,9 @@ export function IdeaSongItem({
 
         {/* Added at */}
         <span className="hidden text-xs text-muted-foreground sm:block">{addedAt}</span>
+
+        {/* Vote Buttons */}
+        <VoteButtons songId={song.id} currentUser={currentUser} />
 
         {/* Note indicator */}
         {song.note && (
