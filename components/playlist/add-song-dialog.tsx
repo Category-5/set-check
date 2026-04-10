@@ -154,7 +154,7 @@ export function AddSongDialog({
                 <p className="font-medium text-foreground truncate">
                   {searchResult.title}
                 </p>
-                <p className="text-sm text-muted-foreground truncate">
+                <p className="text-sm text-muted-foreground break-words">
                   {searchResult.artistName}
                 </p>
               </div>
