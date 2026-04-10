@@ -22,7 +22,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [currentUser, setCurrentUser] = useState<string | null>(null)
 
   useEffect(() => {
-    const storedName = sessionStorage.getItem("setcheck_username")
+    const storedName = localStorage.getItem("setcheck_username")
     if (storedName) {
       setCurrentUser(storedName)
     }
