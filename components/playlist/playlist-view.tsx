@@ -29,6 +29,35 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
     }
   }, [])
 
+  // Track recently viewed playlists in localStorage
+  useEffect(() => {
+    const RECENT_PLAYLISTS_KEY = "set-check-recent-playlists"
+    const MAX_RECENT = 12
+
+    try {
+      const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
+      const recent = stored ? JSON.parse(stored) : []
+
+      // Remove existing entry for this playlist if present
+      const filtered = recent.filter((p: { id: string }) => p.id !== playlist.id)
+
+      // Add current playlist at the beginning
+      const updated = [
+        {
+          id: playlist.id,
+          name: playlist.name,
+          cover_url: playlist.cover_url,
+          viewedAt: Date.now(),
+        },
+        ...filtered,
+      ].slice(0, MAX_RECENT)
+
+      localStorage.setItem(RECENT_PLAYLISTS_KEY, JSON.stringify(updated))
+    } catch {
+      // localStorage not available or quota exceeded
+    }
+  }, [playlist.id, playlist.name, playlist.cover_url])
+
   // Separate promoted songs (the Set) from ideas
   const promotedSongs = useMemo(() => 
     songs.filter((s) => s.is_promoted).sort((a, b) => a.position - b.position),

@@ -1,25 +1,158 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Plus, Music, Clock } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 
-export default async function HomePage() {
-  const supabase = await createClient()
-  
-  // Create a new playlist
-  const playlistId = nanoid(10)
-  
-  const { error } = await supabase
-    .from("playlists")
-    .insert({
+interface RecentPlaylist {
+  id: string
+  name: string
+  cover_url: string | null
+  viewedAt: number
+}
+
+const RECENT_PLAYLISTS_KEY = "set-check-recent-playlists"
+
+export default function HomePage() {
+  const router = useRouter()
+  const [recentPlaylists, setRecentPlaylists] = useState<RecentPlaylist[]>([])
+  const [isCreating, setIsCreating] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as RecentPlaylist[]
+        // Sort by most recently viewed
+        parsed.sort((a, b) => b.viewedAt - a.viewedAt)
+        setRecentPlaylists(parsed)
+      } catch {
+        // Invalid JSON, ignore
+      }
+    }
+    setIsLoaded(true)
+  }, [])
+
+  const createNewPlaylist = async () => {
+    setIsCreating(true)
+    const supabase = createClient()
+    const playlistId = nanoid(10)
+
+    const { error } = await supabase.from("playlists").insert({
       id: playlistId,
       name: "My Playlist",
       description: "A collaborative playlist",
     })
-  
-  if (error) {
-    console.error("Error creating playlist:", error)
-    // Still redirect, the page will handle the error
+
+    if (!error) {
+      router.push(`/p/${playlistId}`)
+    } else {
+      console.error("Error creating playlist:", error)
+      setIsCreating(false)
+    }
   }
-  
-  redirect(`/p/${playlistId}`)
+
+  const formatTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000)
+    if (seconds < 60) return "Just now"
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+    const weeks = Math.floor(days / 7)
+    return `${weeks}w ago`
+  }
+
+  if (!isLoaded) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </main>
+    )
+  }
+
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Header */}
+        <header className="mb-12">
+          <h1 className="text-4xl font-bold text-foreground mb-2">Set Check</h1>
+          <p className="text-muted-foreground">
+            Create and share playlists with friends. No account needed.
+          </p>
+        </header>
+
+        {/* Create New Playlist Button */}
+        <Button
+          onClick={createNewPlaylist}
+          disabled={isCreating}
+          size="lg"
+          className="mb-12 gap-2"
+        >
+          <Plus className="w-5 h-5" />
+          {isCreating ? "Creating..." : "Create New Playlist"}
+        </Button>
+
+        {/* Recent Playlists Section */}
+        {recentPlaylists.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <Clock className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">
+                Recently Viewed
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {recentPlaylists.map((playlist) => (
+                <button
+                  key={playlist.id}
+                  onClick={() => router.push(`/p/${playlist.id}`)}
+                  className="group text-left p-3 rounded-lg bg-card hover:bg-secondary transition-colors"
+                >
+                  <div className="aspect-square rounded-md bg-secondary mb-3 overflow-hidden flex items-center justify-center">
+                    {playlist.cover_url ? (
+                      <img
+                        src={playlist.cover_url}
+                        alt={playlist.name}
+                        className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
+                      />
+                    ) : (
+                      <Music className="w-12 h-12 text-muted-foreground" />
+                    )}
+                  </div>
+                  <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                    {playlist.name}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {formatTimeAgo(playlist.viewedAt)}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty State */}
+        {recentPlaylists.length === 0 && (
+          <section className="text-center py-16">
+            <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              No playlists yet
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Create your first playlist to get started
+            </p>
+          </section>
+        )}
+      </div>
+    </main>
+  )
 }
