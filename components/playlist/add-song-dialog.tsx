@@ -104,7 +104,7 @@ export function AddSongDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add a Song</DialogTitle>
         </DialogHeader>
@@ -137,7 +137,7 @@ export function AddSongDialog({
           )}
 
           {searchResult && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary overflow-hidden">
               <div className="shrink-0 w-14 h-14 rounded bg-muted flex items-center justify-center overflow-hidden">
                 {searchResult.thumbnailUrl ? (
                   <img
@@ -150,7 +150,7 @@ export function AddSongDialog({
                   <Music className="w-6 h-6 text-muted-foreground" />
                 )}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1 overflow-hidden">
                 <p className="font-medium text-foreground truncate">
                   {searchResult.title}
                 </p>
