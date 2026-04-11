@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Music, Clock, Users, Vote, Link2, ArrowRight } from "lucide-react"
+import { Logo } from "@/components/logo"
 import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 
@@ -105,6 +106,14 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      {/* Header with Logo */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
+        <div className="max-w-5xl mx-auto flex items-center gap-3">
+          <Logo size={40} />
+          <span className="text-lg font-semibold text-foreground">Set Check</span>
+        </div>
+      </header>
 
       {/* Music-themed background pattern */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
