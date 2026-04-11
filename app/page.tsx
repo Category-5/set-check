@@ -122,9 +122,19 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="border-t border-border bg-card/50">
-        <div className="max-w-5xl mx-auto px-4 py-16 sm:py-20">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+      <section className="py-12 sm:py-16 px-4">
+        <div className="max-w-4xl mx-auto rounded-2xl border border-border bg-card/80 p-8 sm:p-12 relative overflow-hidden">
+          {/* Subtle noise texture overlay */}
+          <div 
+            className="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            }}
+          />
+          {/* Subtle gradient accent */}
+          <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          
+          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
             <div className="text-center sm:text-left">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
                 <Users className="w-6 h-6" />
