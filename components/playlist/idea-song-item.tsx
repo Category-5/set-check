@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowUp, Music, MoreHorizontal, Trash2, MessageCircle, ExternalLink } from "lucide-react"
+import { ArrowUp, Music, MoreHorizontal, Trash2, MessageCircle, ExternalLink, GripVertical } from "lucide-react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -50,6 +52,20 @@ export function IdeaSongItem({
   const [isPromoting, setIsPromoting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const supabase = createClient()
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: song.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
 
   const handlePromote = async () => {
     setIsPromoting(true)
@@ -115,13 +131,28 @@ export function IdeaSongItem({
 
   return (
     <>
-      <div className="group rounded-lg bg-card hover:bg-secondary/50 transition-colors p-3">
+      <div 
+        ref={setNodeRef}
+        style={style}
+        className={`group rounded-lg bg-card hover:bg-secondary/50 transition-colors p-2 sm:p-3 ${isDragging ? "opacity-50 shadow-lg z-50" : ""}`}
+      >
         {/* Main Row */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Drag Handle - Only show for creator */}
+          {isCreator && (
+            <button
+              {...attributes}
+              {...listeners}
+              className="touch-none text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+            >
+              <GripVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
+
           {/* Thumbnail */}
           <button
             onClick={() => setIsLinksOpen(true)}
-            className="shrink-0 w-12 h-12 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all"
+            className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all relative"
           >
             {song.thumbnail_url ? (
               <Image
@@ -133,7 +164,7 @@ export function IdeaSongItem({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
-                <Music className="h-5 w-5 text-muted-foreground" />
+                <Music className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
             )}
           </button>
@@ -143,8 +174,8 @@ export function IdeaSongItem({
             onClick={() => setIsLinksOpen(true)}
             className="flex-1 min-w-0 text-left"
           >
-            <p className="font-medium text-foreground truncate hover:underline">{song.title}</p>
-            <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
+            <p className="font-medium text-sm sm:text-base text-foreground truncate hover:underline">{song.title}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{song.artist}</p>
           </button>
 
           {/* Added at - Hidden on mobile */}

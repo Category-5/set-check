@@ -7,21 +7,10 @@ import { NoteDialog } from "./note-dialog"
 import { createClient } from "@/lib/supabase/client"
 import type { Song } from "@/lib/types"
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core"
-import {
-  arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
+import { useDroppable } from "@dnd-kit/core"
 
 interface SongListProps {
   songs: Song[]
@@ -29,10 +18,10 @@ interface SongListProps {
   currentUser: string | null
   isCreator?: boolean
   onSongRemoved: (songId: string) => void
-  onSongsReordered: (songs: Song[]) => void
   onSongUpdated: (song: Song) => void
   onAddSongClick?: () => void
   showAddButton?: boolean
+  droppableId?: string
 }
 
 export function SongList({
@@ -41,57 +30,19 @@ export function SongList({
   currentUser,
   isCreator = false,
   onSongRemoved,
-  onSongsReordered,
   onSongUpdated,
   onAddSongClick,
   showAddButton = true,
+  droppableId,
 }: SongListProps) {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [isPlatformDialogOpen, setIsPlatformDialogOpen] = useState(false)
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false)
   const supabase = createClient()
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 150,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-
-    if (over && active.id !== over.id) {
-      const oldIndex = songs.findIndex((s) => s.id === active.id)
-      const newIndex = songs.findIndex((s) => s.id === over.id)
-
-      const newSongs = arrayMove(songs, oldIndex, newIndex)
-      onSongsReordered(newSongs)
-
-      // Update positions in database
-      const updates = newSongs.map((song, index) => ({
-        id: song.id,
-        position: index,
-      }))
-
-      for (const update of updates) {
-        await supabase
-          .from("songs")
-          .update({ position: update.position })
-          .eq("id", update.id)
-      }
-    }
-  }
+  const { setNodeRef, isOver } = useDroppable({
+    id: droppableId || "song-list",
+  })
 
   const handleRemoveSong = async (songId: string) => {
     const { error } = await supabase.from("songs").delete().eq("id", songId)
@@ -125,20 +76,14 @@ export function SongList({
     setIsNoteDialogOpen(false)
   }
 
-  if (songs.length === 0) {
-    return null
-  }
-
   return (
     <>
-
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
+      <div 
+        ref={setNodeRef}
+        className={`min-h-[60px] transition-colors rounded-lg ${isOver ? "bg-primary/10 ring-2 ring-primary ring-dashed" : ""}`}
       >
         <SortableContext items={songs.map(s => s.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+          <div className="space-y-1.5 sm:space-y-2">
             {songs.map((song, index) => (
               <SongItem
                 key={song.id}
@@ -153,7 +98,7 @@ export function SongList({
             ))}
           </div>
         </SortableContext>
-      </DndContext>
+      </div>
 
       <PlatformLinksDialog
         open={isPlatformDialogOpen}
