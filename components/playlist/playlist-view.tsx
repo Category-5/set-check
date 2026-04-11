@@ -90,12 +90,13 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   }, [playlist.id, playlist.name, playlist.cover_url])
 
   // Check if current user is the playlist creator
-  const isCreator = useMemo(() => 
-    currentUser !== null && playlist.created_by !== null && currentUser === playlist.created_by,
-    [currentUser, playlist.created_by]
-  )
-  
-  console.log("[v0] isCreator check:", { currentUser, createdBy: playlist.created_by, isCreator })
+  // If playlist has no creator set (null), treat the current user as the creator
+  const isCreator = useMemo(() => {
+    if (currentUser === null) return false
+    // If no creator is set, the current user is treated as the creator
+    if (playlist.created_by === null) return true
+    return currentUser === playlist.created_by
+  }, [currentUser, playlist.created_by])
 
   // Separate promoted songs (the Set) from ideas
   const promotedSongs = useMemo(() => 
