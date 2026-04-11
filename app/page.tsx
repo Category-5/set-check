@@ -83,9 +83,9 @@ export default function HomePage() {
     <main className="min-h-screen bg-background flex flex-col items-center">
       <div className="w-full max-w-4xl px-4 py-12">
         {/* Header */}
-        <header className="mb-12 text-center">
+        <header className="mb-12 text-center max-w-xl mx-auto">
           <h1 className="text-4xl font-bold text-foreground mb-2">Set Check</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-balance">
             A completely free way to collaborate on a setlist. No account needed. Share songs and vote on them, and then link to any music streamer.
           </p>
         </header>
