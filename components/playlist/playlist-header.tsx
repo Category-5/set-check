@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, Music, ImagePlus, Link2 } from "lucide-react"
+import { Share2, Music, ImagePlus, Link2 } from "lucide-react"
 import type { Playlist } from "@/lib/types"
 
 interface PlaylistHeaderProps {
@@ -144,7 +144,7 @@ export function PlaylistHeader({
             </Button>
           )}
           <Button onClick={onShareClick} size="icon" className="rounded-full h-10 w-10">
-            <ExternalLink className="w-5 h-5" />
+            <Share2 className="w-5 h-5" />
           </Button>
         </div>
       </div>

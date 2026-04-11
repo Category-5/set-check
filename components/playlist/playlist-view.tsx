@@ -253,17 +253,17 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
         <div className="flex justify-end gap-2 mb-4">
           <button
             onClick={() => setIsEditSetlistOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+            className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-secondary/80"
+            aria-label="Edit setlist"
           >
             <Pencil className="w-4 h-4" />
-            <span className="hidden sm:inline">Edit</span>
           </button>
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+            className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-secondary/80"
+            aria-label="Go home"
           >
             <Home className="w-4 h-4" />
-            <span className="hidden sm:inline">Home</span>
           </Link>
         </div>
 
