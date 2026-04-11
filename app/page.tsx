@@ -144,6 +144,16 @@ export default function HomePage() {
               {isCreating ? "Creating..." : "Create a Setlist"}
               <ArrowRight className="w-5 h-5" />
             </Button>
+
+            {/* Testimonial */}
+            <blockquote className="mt-12 max-w-xl mx-auto">
+              <p className="text-muted-foreground italic text-sm sm:text-base leading-relaxed">
+                {'"Now I can work together with my team to find songs for the worship nights I plan even though we all use different music platforms. The voting and promoting feature helps provide clarity on which songs feel right."'}
+              </p>
+              <footer className="mt-3 text-sm font-medium text-foreground">
+                — Josh
+              </footer>
+            </blockquote>
           </div>
         </div>
       </section>
