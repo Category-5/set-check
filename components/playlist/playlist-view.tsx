@@ -261,7 +261,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
               {promotedSongs.length} {promotedSongs.length === 1 ? "song" : "songs"}
             </span>
           </div>
-          <div className="rounded-xl border-2 border-orange-500 bg-card/50 p-2 sm:p-4">
+          <div className="rounded-xl border-2 border-orange-500 bg-card/50 p-1.5 sm:p-3">
             <SongList
               songs={promotedSongs}
               playlistId={playlist.id}

@@ -94,6 +94,7 @@ export function SongList({
                 onRemove={() => handleRemoveSong(song.id)}
                 onClick={() => handleSongClick(song)}
                 onNoteClick={() => handleNoteClick(song)}
+                onSongUpdated={onSongUpdated}
               />
             ))}
           </div>
