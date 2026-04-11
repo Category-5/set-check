@@ -201,7 +201,7 @@ export function PlaylistHeader({
               <h1 className="text-2xl sm:text-4xl font-bold text-foreground truncate text-balance">
                 {playlist.name}
               </h1>
-              <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
+              <Pencil className="w-4 h-4 text-muted-foreground opacity-100 sm:opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
             </div>
           </button>
         )}
@@ -247,7 +247,7 @@ export function PlaylistHeader({
               <p className="text-muted-foreground text-sm">
                 {playlist.description || "Add a description..."}
               </p>
-              <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover/desc:opacity-100 transition-opacity shrink-0" />
+              <Pencil className="w-3 h-3 text-muted-foreground opacity-100 sm:opacity-0 group-hover/desc:opacity-100 transition-opacity shrink-0" />
             </div>
           </button>
         )}
