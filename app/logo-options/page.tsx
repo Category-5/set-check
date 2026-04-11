@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 
-// Variation 1: Blobby teardrop arrow emerging from top pill
+// Variation 1: Organic blob with gradient, southwest-pointing arrowhead
 function LogoOption1({ size = 120 }: { size?: number }) {
+  const gradientId = `blobGradient1-${size}`
   return (
     <svg
       width={size}
@@ -12,72 +13,13 @@ function LogoOption1({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three pill/capsule items */}
-      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
-      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
-      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
+      <defs>
+        <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#A855F7" />
+          <stop offset="100%" stopColor="#E9D5FF" />
+        </linearGradient>
+      </defs>
       
-      {/* Blobby arrow body emerging from top pill, curving to bottom */}
-      <path
-        d="M65 31 C65 26 72 26 75 31 C85 31 95 40 95 55 C95 70 88 80 80 88 C78 90 73 92 70 92 C67 92 65 90 67 86 C72 80 78 72 78 55 C78 45 72 38 65 38 C62 38 62 34 65 31 Z"
-        fill="#A855F7"
-      />
-      {/* Blobby arrow head pointing at third pill */}
-      <ellipse cx="65" cy="91" rx="10" ry="8" fill="#A855F7" />
-      <path
-        d="M55 85 Q65 102 75 85"
-        fill="#A855F7"
-      />
-    </svg>
-  )
-}
-
-// Variation 2: Thick blobby curved stroke with rounded arrow tip
-function LogoOption2({ size = 120 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 120 120"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Three pill/capsule items */}
-      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
-      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
-      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
-      
-      {/* Blob starting point emerging from top pill */}
-      <ellipse cx="68" cy="31" rx="9" ry="7" fill="#A855F7" />
-      
-      {/* Thick blobby curved arrow body */}
-      <path
-        d="M75 31 Q100 35 95 60 Q90 85 68 91"
-        stroke="#A855F7"
-        strokeWidth="12"
-        strokeLinecap="round"
-        fill="none"
-      />
-      
-      {/* Blobby arrow head - points down at third pill */}
-      <ellipse cx="68" cy="91" rx="10" ry="6" fill="#A855F7" />
-      <circle cx="58" cy="86" r="6" fill="#A855F7" />
-      <circle cx="78" cy="86" r="6" fill="#A855F7" />
-      <ellipse cx="68" cy="97" rx="7" ry="5" fill="#A855F7" />
-    </svg>
-  )
-}
-
-// Variation 3: Organic blob shape with clear downward pointer
-function LogoOption3({ size = 120 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 120 120"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
       {/* Three pill/capsule items */}
       <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
       <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
@@ -85,18 +27,22 @@ function LogoOption3({ size = 120 }: { size?: number }) {
       
       {/* Organic blob arrow emerging from top pill */}
       <path
-        d="M60 25 C68 22 78 25 85 35 C95 50 92 70 82 82 C78 87 72 91 68 95 C64 99 60 99 60 95 C60 91 66 87 72 80 C80 70 82 55 76 42 C72 35 66 32 60 32 C55 32 55 28 60 25 Z"
-        fill="#A855F7"
+        d="M60 24 C70 20 85 28 92 45 C98 62 90 78 75 88 C72 90 68 92 65 93 C60 95 56 92 58 88 C62 82 70 76 76 65 C82 54 80 42 72 34 C66 28 60 28 58 30 C54 32 54 26 60 24 Z"
+        fill={`url(#${gradientId})`}
       />
-      {/* Arrow tip blob pointing at third pill */}
-      <ellipse cx="60" cy="91" rx="12" ry="6" fill="#A855F7" />
-      <ellipse cx="60" cy="98" rx="6" ry="4" fill="#A855F7" />
+      {/* Southwest-pointing blobby arrowhead */}
+      <ellipse cx="58" cy="95" rx="8" ry="5" fill="#E9D5FF" transform="rotate(-25 58 95)" />
+      <path
+        d="M50 90 Q48 102 58 100 Q52 98 50 90 Z"
+        fill="#E9D5FF"
+      />
     </svg>
   )
 }
 
-// Variation 4: Puffy cloud-like arrow with soft curves
-function LogoOption4({ size = 120 }: { size?: number }) {
+// Variation 2: Thicker organic blob with bold gradient and clear SW arrow
+function LogoOption2({ size = 120 }: { size?: number }) {
+  const gradientId = `blobGradient2-${size}`
   return (
     <svg
       width={size}
@@ -105,29 +51,109 @@ function LogoOption4({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <defs>
+        <linearGradient id={gradientId} x1="80%" y1="0%" x2="20%" y2="100%">
+          <stop offset="0%" stopColor="#9333EA" />
+          <stop offset="50%" stopColor="#A855F7" />
+          <stop offset="100%" stopColor="#D8B4FE" />
+        </linearGradient>
+      </defs>
+      
       {/* Three pill/capsule items */}
-      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
-      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
-      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
       
-      {/* Puffy blob emerging from top pill */}
-      <circle cx="72" cy="30" r="10" fill="#A855F7" />
-      
-      {/* Cloud-like blobby curve made of overlapping circles */}
-      <circle cx="85" cy="38" r="9" fill="#A855F7" />
-      <circle cx="92" cy="50" r="9" fill="#A855F7" />
-      <circle cx="90" cy="64" r="9" fill="#A855F7" />
-      <circle cx="82" cy="76" r="9" fill="#A855F7" />
-      <circle cx="72" cy="84" r="9" fill="#A855F7" />
-      
-      {/* Blobby arrow tip pointing at third pill */}
-      <ellipse cx="65" cy="91" rx="12" ry="7" fill="#A855F7" />
-      <ellipse cx="65" cy="99" rx="7" ry="5" fill="#A855F7" />
+      {/* Thicker organic blob emerging from top pill */}
+      <path
+        d="M62 22 C75 18 92 30 96 50 C100 70 88 85 70 92 C65 94 58 94 55 90 C52 86 56 82 62 78 C74 70 82 58 78 44 C74 32 64 28 58 30 C52 32 52 26 62 22 Z"
+        fill={`url(#${gradientId})`}
+      />
+      {/* Southwest-pointing blobby arrowhead */}
+      <ellipse cx="52" cy="94" rx="10" ry="6" fill="#D8B4FE" transform="rotate(-30 52 94)" />
+      <path
+        d="M42 88 C38 96 44 104 52 100 C46 100 42 95 42 88 Z"
+        fill="#D8B4FE"
+      />
     </svg>
   )
 }
 
-// Variation 5: Smooth tapered blob with gradient
+// Variation 3: Smooth flowing blob with subtle gradient and rounded SW tip
+function LogoOption3({ size = 120 }: { size?: number }) {
+  const gradientId = `blobGradient3-${size}`
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="70%" y1="10%" x2="30%" y2="90%">
+          <stop offset="0%" stopColor="#A855F7" />
+          <stop offset="100%" stopColor="#C084FC" />
+        </linearGradient>
+      </defs>
+      
+      {/* Three pill/capsule items */}
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
+      
+      {/* Smooth flowing organic blob */}
+      <path
+        d="M60 23 C72 19 88 28 94 48 C99 68 88 84 72 92 L62 96 C56 98 52 94 56 88 C60 82 70 74 76 60 C81 48 76 36 66 30 C58 26 56 28 60 23 Z"
+        fill={`url(#${gradientId})`}
+      />
+      {/* Southwest blobby arrow tip */}
+      <circle cx="54" cy="94" r="7" fill="#C084FC" />
+      <ellipse cx="48" cy="98" rx="5" ry="4" fill="#C084FC" transform="rotate(-40 48 98)" />
+    </svg>
+  )
+}
+
+// Variation 4: Tapered blob with vivid gradient and distinct SW arrow
+function LogoOption4({ size = 120 }: { size?: number }) {
+  const gradientId = `blobGradient4-${size}`
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#7C3AED" />
+          <stop offset="50%" stopColor="#A855F7" />
+          <stop offset="100%" stopColor="#E9D5FF" />
+        </linearGradient>
+      </defs>
+      
+      {/* Three pill/capsule items */}
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
+      
+      {/* Tapered organic blob */}
+      <path
+        d="M62 22 C76 18 94 32 96 55 C98 75 84 88 66 94 C60 96 54 94 54 88 C54 82 64 78 74 68 C84 56 84 42 74 32 C66 24 58 26 58 28 C54 30 54 24 62 22 Z"
+        fill={`url(#${gradientId})`}
+      />
+      {/* Clear southwest-pointing arrowhead */}
+      <path
+        d="M54 88 C50 88 44 92 42 98 C44 96 48 94 54 94 C52 92 52 90 54 88 Z"
+        fill="#E9D5FF"
+      />
+      <ellipse cx="46" cy="96" rx="6" ry="5" fill="#E9D5FF" transform="rotate(-35 46 96)" />
+    </svg>
+  )
+}
+
+// Variation 5: Bubbly blob with soft pastel gradient and friendly SW tip
 function LogoOption5({ size = 120 }: { size?: number }) {
   const gradientId = `blobGradient5-${size}`
   return (
@@ -139,31 +165,34 @@ function LogoOption5({ size = 120 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={gradientId} x1="90%" y1="10%" x2="10%" y2="90%">
           <stop offset="0%" stopColor="#A855F7" />
-          <stop offset="100%" stopColor="#C084FC" />
+          <stop offset="60%" stopColor="#C084FC" />
+          <stop offset="100%" stopColor="#F3E8FF" />
         </linearGradient>
       </defs>
       
       {/* Three pill/capsule items */}
-      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
-      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
-      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
       
-      {/* Smooth tapered blob emerging from top, curving to bottom */}
+      {/* Bubbly organic blob */}
       <path
-        d="M65 24 C75 20 88 28 94 45 C100 62 92 80 78 90 L68 97 C62 100 58 97 62 92 L70 86 C82 76 88 60 82 45 C78 35 70 30 65 32 C58 34 58 28 65 24 Z"
+        d="M58 24 C68 20 86 26 92 46 C97 66 86 82 68 92 C62 95 56 94 55 88 C54 82 62 76 72 66 C82 54 82 40 72 32 C64 26 56 28 56 30 C52 32 52 26 58 24 Z"
         fill={`url(#${gradientId})`}
       />
-      {/* Rounded arrow tip */}
-      <ellipse cx="65" cy="94" rx="9" ry="6" fill="#C084FC" />
-      <ellipse cx="65" cy="100" rx="5" ry="4" fill="#C084FC" />
+      {/* Friendly bubbly SW arrowhead */}
+      <circle cx="52" cy="92" r="6" fill="#F3E8FF" />
+      <circle cx="44" cy="98" r="5" fill="#F3E8FF" />
+      <circle cx="38" cy="102" r="3" fill="#F3E8FF" />
     </svg>
   )
 }
 
-// Variation 6: Simple thick blobby arrow with clear direction
+// Variation 6: Bold blob with deep gradient and chunky SW arrow
 function LogoOption6({ size = 120 }: { size?: number }) {
+  const gradientId = `blobGradient6-${size}`
   return (
     <svg
       width={size}
@@ -172,30 +201,27 @@ function LogoOption6({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      <defs>
+        <linearGradient id={gradientId} x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#DDD6FE" />
+        </linearGradient>
+      </defs>
+      
       {/* Three pill/capsule items */}
-      <rect x="15" y="20" rx="11" ry="11" width="48" height="22" fill="#A855F7" />
-      <rect x="15" y="50" rx="11" ry="11" width="48" height="22" fill="#C084FC" />
-      <rect x="15" y="80" rx="11" ry="11" width="48" height="22" fill="#E9D5FF" />
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
       
-      {/* Blob origin emerging from top pill */}
-      <ellipse cx="66" cy="31" rx="10" ry="8" fill="#A855F7" />
-      
-      {/* Thick blobby curved body */}
+      {/* Bold thick organic blob */}
       <path
-        d="M66 31 C66 31 98 35 96 60 C94 85 72 88 66 91"
-        stroke="#A855F7"
-        strokeWidth="14"
-        strokeLinecap="round"
-        fill="none"
+        d="M60 20 C78 16 98 34 98 56 C98 78 82 92 60 96 C52 97 48 92 52 86 C58 78 72 72 80 58 C86 46 80 32 68 28 C58 24 54 28 56 32 C50 34 50 24 60 20 Z"
+        fill={`url(#${gradientId})`}
       />
-      
-      {/* Clearly pointing blobby arrow head at third pill */}
-      <ellipse cx="66" cy="91" rx="14" ry="8" fill="#A855F7" />
-      {/* Arrow point extending down toward third pill */}
-      <path
-        d="M52 88 Q66 108 80 88"
-        fill="#A855F7"
-      />
+      {/* Chunky southwest-pointing arrowhead */}
+      <ellipse cx="50" cy="94" rx="9" ry="6" fill="#DDD6FE" transform="rotate(-30 50 94)" />
+      <ellipse cx="42" cy="100" rx="7" ry="5" fill="#DDD6FE" transform="rotate(-40 42 100)" />
+      <circle cx="36" cy="104" r="4" fill="#DDD6FE" />
     </svg>
   )
 }
@@ -204,12 +230,12 @@ export default function LogoOptionsPage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
 
   const logos = [
-    { id: 1, name: "Teardrop Flow", description: "Organic teardrop blob curving from top to bottom", Component: LogoOption1 },
-    { id: 2, name: "Thick & Bubbly", description: "Extra thick stroke with bubbly arrow head", Component: LogoOption2 },
-    { id: 3, name: "Organic Blob", description: "Smooth organic shape with soft pointer", Component: LogoOption3 },
-    { id: 4, name: "Puffy Cloud", description: "Cloud-like stacked circles forming the curve", Component: LogoOption4 },
-    { id: 5, name: "Gradient Taper", description: "Smooth tapered blob with purple gradient", Component: LogoOption5 },
-    { id: 6, name: "Bold Bubble", description: "Simple thick blobby curve with clear arrow", Component: LogoOption6 },
+    { id: 1, name: "Soft Gradient", description: "Organic blob with purple-to-lavender gradient, SW arrow", Component: LogoOption1 },
+    { id: 2, name: "Bold Flow", description: "Thicker blob with three-stop gradient, clear SW tip", Component: LogoOption2 },
+    { id: 3, name: "Smooth Stream", description: "Flowing blob with subtle gradient, rounded SW point", Component: LogoOption3 },
+    { id: 4, name: "Vivid Taper", description: "Tapered blob with vivid violet gradient, distinct SW arrow", Component: LogoOption4 },
+    { id: 5, name: "Bubbly Trail", description: "Soft pastel gradient with bubbly SW arrow trail", Component: LogoOption5 },
+    { id: 6, name: "Deep Chunk", description: "Bold deep gradient with chunky cascading SW tip", Component: LogoOption6 },
   ]
 
   return (
@@ -217,7 +243,7 @@ export default function LogoOptionsPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-2">Set Check Logo Options</h1>
         <p className="text-muted-foreground mb-8">
-          Blobby arrows emerging from the top pill, pointing to the third item. Click to preview at different sizes.
+          Organic blob arrows with gradients, emerging from the top pill and pointing southwest toward the third item.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
