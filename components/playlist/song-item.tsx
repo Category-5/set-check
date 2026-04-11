@@ -23,15 +23,17 @@ import type { Song } from "@/lib/types"
 // Key colors - each musical key gets a distinct color
 const KEY_COLORS: Record<string, { bg: string; text: string }> = {
   A: { bg: "bg-red-500", text: "text-white" },
+  Bb: { bg: "bg-rose-400", text: "text-white" },
   B: { bg: "bg-orange-500", text: "text-white" },
   C: { bg: "bg-yellow-400", text: "text-yellow-900" },
   D: { bg: "bg-green-500", text: "text-white" },
+  Eb: { bg: "bg-emerald-400", text: "text-white" },
   E: { bg: "bg-teal-500", text: "text-white" },
   F: { bg: "bg-blue-500", text: "text-white" },
   G: { bg: "bg-purple-500", text: "text-white" },
 }
 
-const KEYS = ["A", "B", "C", "D", "E", "F", "G"]
+const KEYS = ["A", "Bb", "B", "C", "D", "Eb", "E", "F", "G"]
 
 interface SongItemProps {
   song: Song
@@ -130,7 +132,7 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
         {/* Key Badge */}
         <button
           onClick={handleKeyClick}
-          className={`shrink-0 w-7 h-7 rounded font-bold text-sm flex items-center justify-center transition-all hover:scale-110 hover:shadow-md ${keyColor.bg} ${keyColor.text}`}
+          className={`shrink-0 px-1 py-0.5 min-w-[1.1rem] rounded text-[10px] sm:text-xs font-bold leading-none flex items-center justify-center transition-all hover:scale-110 hover:shadow-md ${keyColor.bg} ${keyColor.text}`}
           title={`Key: ${currentKey} (click to change)`}
         >
           {currentKey}
