@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-// Logo Option 1: Curved arrow with three bubbly circles
+// Pill Stack Variation 1: Gentle curve with dot indicator
 function LogoOption1({ size = 120 }: { size?: number }) {
   return (
     <svg
@@ -12,14 +12,14 @@ function LogoOption1({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three bubbly list items */}
-      <circle cx="35" cy="30" r="14" fill="#A855F7" />
-      <circle cx="35" cy="60" r="14" fill="#C084FC" />
-      <circle cx="35" cy="90" r="14" fill="#E9D5FF" />
+      {/* Three pill/capsule items */}
+      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
+      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
+      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
       
-      {/* Curved arrow showing top item moving down */}
+      {/* Gentle curved arrow */}
       <path
-        d="M55 30 Q85 30 85 60 Q85 90 70 90"
+        d="M75 31 Q90 31 90 60 Q90 89 75 89"
         stroke="#A855F7"
         strokeWidth="5"
         strokeLinecap="round"
@@ -27,18 +27,20 @@ function LogoOption1({ size = 120 }: { size?: number }) {
       />
       {/* Arrow head */}
       <path
-        d="M75 82 L70 92 L62 85"
+        d="M82 80 L75 91 L68 82"
         stroke="#A855F7"
         strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
+      {/* Small circle at top indicating origin */}
+      <circle cx="75" cy="31" r="7" fill="#E9D5FF" stroke="#A855F7" strokeWidth="2.5" />
     </svg>
   )
 }
 
-// Logo Option 2: Rounded rectangle items with bouncy arrow
+// Pill Stack Variation 2: Tighter curve, bubbly arrow tip
 function LogoOption2({ size = 120 }: { size?: number }) {
   return (
     <svg
@@ -48,34 +50,29 @@ function LogoOption2({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three rounded rectangle items */}
-      <rect x="20" y="18" rx="10" ry="10" width="45" height="20" fill="#A855F7" />
-      <rect x="20" y="50" rx="10" ry="10" width="45" height="20" fill="#C084FC" />
-      <rect x="20" y="82" rx="10" ry="10" width="45" height="20" fill="#E9D5FF" />
+      {/* Three pill/capsule items */}
+      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
+      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
+      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
       
-      {/* Bubbly curved arrow */}
+      {/* Tighter curved arrow */}
       <path
-        d="M72 28 C100 28 100 92 82 92"
+        d="M75 31 Q98 31 98 60 Q98 91 78 91"
         stroke="#A855F7"
-        strokeWidth="6"
+        strokeWidth="5"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Arrow head - more bubbly */}
-      <circle cx="82" cy="92" r="6" fill="#A855F7" />
-      <path
-        d="M88 84 L82 95 L74 86"
-        stroke="#A855F7"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
+      {/* Bubbly arrow tip */}
+      <circle cx="78" cy="91" r="7" fill="#A855F7" />
+      <circle cx="78" cy="91" r="3" fill="#E9D5FF" />
+      {/* Origin indicator */}
+      <circle cx="75" cy="31" r="6" fill="#A855F7" />
     </svg>
   )
 }
 
-// Logo Option 3: Musical note-inspired circles with flowing arrow
+// Pill Stack Variation 3: Wide swooping curve
 function LogoOption3({ size = 120 }: { size?: number }) {
   return (
     <svg
@@ -85,33 +82,35 @@ function LogoOption3({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three bubbly circles with varying sizes for playfulness */}
-      <circle cx="32" cy="28" r="16" fill="#A855F7" />
-      <circle cx="32" cy="60" r="12" fill="#C084FC" />
-      <circle cx="32" cy="88" r="14" fill="#E9D5FF" />
+      {/* Three pill/capsule items */}
+      <rect x="12" y="20" rx="12" ry="12" width="48" height="22" fill="#A855F7" />
+      <rect x="12" y="50" rx="12" ry="12" width="48" height="22" fill="#C084FC" />
+      <rect x="12" y="80" rx="12" ry="12" width="48" height="22" fill="#E9D5FF" />
       
-      {/* Flowing S-curve arrow */}
+      {/* Wide swooping curve */}
       <path
-        d="M52 28 C80 28 65 60 80 60 C95 60 80 88 60 88"
-        stroke="url(#gradient3)"
+        d="M70 31 C105 31 105 91 70 91"
+        stroke="#A855F7"
         strokeWidth="5"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Arrow head */}
-      <polygon points="60,88 68,80 68,96" fill="#A855F7" />
-      
-      <defs>
-        <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#A855F7" />
-          <stop offset="100%" stopColor="#E9D5FF" />
-        </linearGradient>
-      </defs>
+      {/* Rounded arrow head */}
+      <path
+        d="M78 82 L70 93 L62 84"
+        stroke="#A855F7"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      {/* Dot at origin */}
+      <circle cx="70" cy="31" r="5" fill="#E9D5FF" />
     </svg>
   )
 }
 
-// Logo Option 4: Pill-shaped items with simple down arrow
+// Pill Stack Variation 4: Soft S-curve
 function LogoOption4({ size = 120 }: { size?: number }) {
   return (
     <svg
@@ -126,29 +125,32 @@ function LogoOption4({ size = 120 }: { size?: number }) {
       <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
       <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
       
-      {/* Simple curved arrow on right */}
+      {/* Soft S-curve */}
       <path
-        d="M75 31 L75 89"
+        d="M75 31 Q95 31 90 55 Q85 75 75 91"
         stroke="#A855F7"
-        strokeWidth="6"
+        strokeWidth="5"
         strokeLinecap="round"
+        fill="none"
       />
+      {/* Arrow head */}
       <path
-        d="M67 78 L75 91 L83 78"
+        d="M82 83 L75 94 L68 85"
         stroke="#A855F7"
-        strokeWidth="6"
+        strokeWidth="5"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
-      {/* Small circle at top indicating "from here" */}
-      <circle cx="75" cy="31" r="8" fill="#E9D5FF" stroke="#A855F7" strokeWidth="3" />
+      {/* Origin ring */}
+      <circle cx="75" cy="31" r="7" fill="none" stroke="#A855F7" strokeWidth="3" />
     </svg>
   )
 }
 
-// Logo Option 5: Super bubbly with bounce effect
+// Pill Stack Variation 5: Elegant curve with gradient
 function LogoOption5({ size = 120 }: { size?: number }) {
+  const gradientId = `pillGradient5-${size}`
   return (
     <svg
       width={size}
@@ -157,28 +159,39 @@ function LogoOption5({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three super bubbly circles with slight overlap feel */}
-      <circle cx="38" cy="30" r="18" fill="#E9D5FF" />
-      <circle cx="38" cy="30" r="18" fill="#A855F7" opacity="0.9" />
-      <circle cx="38" cy="62" r="15" fill="#C084FC" />
-      <circle cx="38" cy="92" r="13" fill="#E9D5FF" />
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#A855F7" />
+          <stop offset="100%" stopColor="#E9D5FF" />
+        </linearGradient>
+      </defs>
       
-      {/* Bouncy curved arrow */}
+      {/* Three pill/capsule items */}
+      <rect x="15" y="20" rx="12" ry="12" width="50" height="22" fill="#A855F7" />
+      <rect x="15" y="50" rx="12" ry="12" width="50" height="22" fill="#C084FC" />
+      <rect x="15" y="80" rx="12" ry="12" width="50" height="22" fill="#E9D5FF" />
+      
+      {/* Elegant curved arrow with gradient */}
       <path
-        d="M60 30 Q95 30 90 60 Q85 95 65 92"
-        stroke="#A855F7"
+        d="M75 31 Q100 35 95 60 Q90 85 75 91"
+        stroke={`url(#${gradientId})`}
         strokeWidth="6"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Bubbly arrow tip */}
-      <circle cx="65" cy="92" r="8" fill="#A855F7" />
-      <circle cx="65" cy="92" r="4" fill="#E9D5FF" />
+      {/* Rounded triangle arrow */}
+      <path
+        d="M82 83 L75 94 L68 85 Z"
+        fill="#E9D5FF"
+      />
+      {/* Dot at origin */}
+      <circle cx="75" cy="31" r="6" fill="#A855F7" />
+      <circle cx="75" cy="31" r="3" fill="white" />
     </svg>
   )
 }
 
-// Logo Option 6: Minimalist with clean lines
+// Pill Stack Variation 6: Bouncy curve with emphasis
 function LogoOption6({ size = 120 }: { size?: number }) {
   return (
     <svg
@@ -188,27 +201,27 @@ function LogoOption6({ size = 120 }: { size?: number }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Three circles with consistent sizing */}
-      <circle cx="35" cy="30" r="12" fill="#A855F7" />
-      <circle cx="35" cy="60" r="12" fill="#C084FC" />
-      <circle cx="35" cy="90" r="12" fill="#E9D5FF" />
+      {/* Three pill/capsule items - slightly rounder */}
+      <rect x="15" y="20" rx="11" ry="11" width="48" height="22" fill="#A855F7" />
+      <rect x="15" y="50" rx="11" ry="11" width="48" height="22" fill="#C084FC" />
+      <rect x="15" y="80" rx="11" ry="11" width="48" height="22" fill="#E9D5FF" />
       
-      {/* Short line connectors */}
-      <line x1="35" y1="42" x2="35" y2="48" stroke="#C084FC" strokeWidth="3" strokeLinecap="round" />
-      <line x1="35" y1="72" x2="35" y2="78" stroke="#E9D5FF" strokeWidth="3" strokeLinecap="round" />
-      
-      {/* Clean curved reorder arrow */}
+      {/* Bouncy curve - wider arc */}
       <path
-        d="M52 30 C75 30 75 60 75 60 C75 90 60 90 55 90"
+        d="M73 31 Q102 36 100 60 Q98 84 73 91"
         stroke="#A855F7"
-        strokeWidth="4"
+        strokeWidth="6"
         strokeLinecap="round"
         fill="none"
       />
+      {/* Bubbly filled arrow tip */}
+      <circle cx="73" cy="91" r="8" fill="#A855F7" />
       <path
-        d="M62 83 L55 92 L55 83"
+        d="M73 91 L80 83 L66 83 Z"
         fill="#A855F7"
       />
+      {/* Origin circle */}
+      <circle cx="73" cy="31" r="8" fill="#E9D5FF" stroke="#A855F7" strokeWidth="2" />
     </svg>
   )
 }
@@ -217,12 +230,12 @@ export default function LogoOptionsPage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
 
   const logos = [
-    { id: 1, name: "Classic Curved", description: "Three circles with elegant curved arrow", Component: LogoOption1 },
-    { id: 2, name: "Rounded Bars", description: "Rounded rectangles with bouncy arrow dot", Component: LogoOption2 },
-    { id: 3, name: "Musical Flow", description: "Varying circle sizes with flowing S-curve", Component: LogoOption3 },
-    { id: 4, name: "Pill Stack", description: "Capsule items with direct down arrow", Component: LogoOption4 },
-    { id: 5, name: "Super Bubbly", description: "Extra bubbly circles with dot-tip arrow", Component: LogoOption5 },
-    { id: 6, name: "Minimalist", description: "Clean circles with connector lines", Component: LogoOption6 },
+    { id: 1, name: "Gentle Curve", description: "Soft curve with dot indicator at origin", Component: LogoOption1 },
+    { id: 2, name: "Bubbly Tip", description: "Tighter curve with nested circle arrow tip", Component: LogoOption2 },
+    { id: 3, name: "Wide Swoop", description: "Wide symmetrical swooping curve", Component: LogoOption3 },
+    { id: 4, name: "S-Curve Flow", description: "Soft S-curve with ring indicator", Component: LogoOption4 },
+    { id: 5, name: "Gradient Elegant", description: "Elegant curve with gradient stroke", Component: LogoOption5 },
+    { id: 6, name: "Bouncy Arc", description: "Wide bouncy arc with filled arrow tip", Component: LogoOption6 },
   ]
 
   return (
@@ -230,7 +243,7 @@ export default function LogoOptionsPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-foreground mb-2">Set Check Logo Options</h1>
         <p className="text-muted-foreground mb-8">
-          Select a logo option. All feature three bubbly list items with an arrow indicating reordering.
+          Pill Stack variations with curved arrows. Select to preview at different sizes.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
@@ -256,7 +269,7 @@ export default function LogoOptionsPage() {
         {selectedOption && (
           <div className="border border-border rounded-2xl bg-card p-8">
             <h2 className="text-xl font-semibold text-foreground mb-6">
-              Selected: Option {selectedOption}
+              Selected: {logos[selectedOption - 1].name}
             </h2>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
