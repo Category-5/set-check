@@ -146,12 +146,16 @@ export default function HomePage() {
             </Button>
 
             {/* Testimonial */}
-            <blockquote className="mt-12 max-w-xl mx-auto">
-              <p className="text-muted-foreground italic text-sm sm:text-base leading-relaxed">
-                {'"Now I can work together with my team to find songs for the worship nights I plan even though we all use different music platforms. The voting and promoting feature helps provide clarity on which songs feel right."'}
+            <blockquote className="mt-12 max-w-xl mx-auto rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 relative">
+              <div className="absolute -top-3 left-6 bg-background px-2">
+                <span className="text-emerald-500 text-2xl font-serif">&ldquo;</span>
+              </div>
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                Now I can work together with my team to find songs for the worship nights I plan even though we all use different music platforms. The voting and promoting feature helps provide clarity on which songs feel right.
               </p>
-              <footer className="mt-3 text-sm font-medium text-foreground">
-                — Josh
+              <footer className="mt-4 flex items-center gap-2">
+                <div className="w-1 h-4 rounded-full bg-emerald-500" />
+                <span className="text-sm font-medium text-foreground">Josh</span>
               </footer>
             </blockquote>
           </div>
@@ -159,7 +163,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 px-4">
+      <section className="pt-6 pb-12 sm:pt-8 sm:pb-16 px-4">
         <div className="max-w-4xl mx-auto rounded-2xl border border-border bg-card/90 backdrop-blur-sm p-8 sm:p-12 relative overflow-hidden">
           {/* Subtle gradient accent */}
           <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
