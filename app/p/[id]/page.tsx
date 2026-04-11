@@ -18,11 +18,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .single()
   
   if (!playlist) {
-    return { title: "Playlist Not Found" }
+    return { title: "Setlist Not Found" }
   }
   
-  const title = `${playlist.name} - Set check`
-  const description = playlist.description || "A collaborative playlist on Set check"
+  const title = `${playlist.name} - Set Check`
+  const description = playlist.description || "A collaborative setlist on Set Check"
   
   return {
     title,

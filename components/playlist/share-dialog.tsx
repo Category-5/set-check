@@ -40,7 +40,7 @@ export function ShareDialog({ open, onOpenChange, playlist }: ShareDialogProps) 
       try {
         await navigator.share({
           title: playlist.name,
-          text: playlist.description || "Check out this playlist!",
+          text: playlist.description || "Check out this setlist!",
           url: shareUrl,
         })
       } catch (err) {
@@ -56,12 +56,12 @@ export function ShareDialog({ open, onOpenChange, playlist }: ShareDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share Playlist</DialogTitle>
+          <DialogTitle>Share Setlist</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Anyone with this link can view and edit the playlist.
+            Anyone with this link can view and edit the setlist.
           </p>
 
           <div className="flex gap-2">

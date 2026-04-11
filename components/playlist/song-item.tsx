@@ -193,40 +193,50 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
       </div>
 
       {/* Mobile Actions Row */}
-      <div className="flex sm:hidden items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50">
-        {/* Vote Buttons */}
-        <VoteButtons songId={song.id} currentUser={currentUser} />
-
-        {/* Note Indicator */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => {
-            e.stopPropagation()
-            onNoteClick()
-          }}
-          className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground"}`}
-        >
-          <MessageCircle className="w-4 h-4" />
-          {song.note && (
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+      <div className="flex sm:hidden items-center justify-between gap-1 mt-2 pt-2 border-t border-border/50">
+        {/* Added By - Mobile */}
+        <div className="text-xs text-muted-foreground">
+          {song.added_by && (
+            <span className="font-medium">{song.added_by}</span>
           )}
-        </Button>
+        </div>
 
-        {/* Remove - only shown to creator */}
-        {isCreator && (
+        {/* Actions */}
+        <div className="flex items-center gap-1">
+          {/* Vote Buttons */}
+          <VoteButtons songId={song.id} currentUser={currentUser} />
+
+          {/* Note Indicator */}
           <Button
             variant="ghost"
             size="icon"
             onClick={(e) => {
               e.stopPropagation()
-              setShowDeleteConfirm(true)
+              onNoteClick()
             }}
-            className="shrink-0 text-muted-foreground hover:text-destructive"
+            className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground"}`}
           >
-            <Trash2 className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4" />
+            {song.note && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+            )}
           </Button>
-        )}
+
+          {/* Remove - only shown to creator */}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteConfirm(true)
+              }}
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation */}

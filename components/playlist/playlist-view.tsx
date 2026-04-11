@@ -6,9 +6,12 @@ import { SongList } from "./song-list"
 import { IdeasSection } from "./ideas-section"
 import { AddSongDialog } from "./add-song-dialog"
 import { ShareDialog } from "./share-dialog"
+import { ExternalLinkDialog } from "./external-link-dialog"
+import { EditSetlistDialog } from "./edit-setlist-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import type { Playlist, Song } from "@/lib/types"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, Home, Pencil } from "lucide-react"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import {
   DndContext,
@@ -34,6 +37,8 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [songs, setSongs] = useState(initialSongs)
   const [isAddSongOpen, setIsAddSongOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isExternalLinkOpen, setIsExternalLinkOpen] = useState(false)
+  const [isEditSetlistOpen, setIsEditSetlistOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<string | null>(null)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const supabase = createClient()
@@ -244,12 +249,29 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
       onDragEnd={handleDragEnd}
     >
       <div className="mx-auto max-w-4xl px-2 sm:px-4 py-6 sm:py-8">
+        {/* Top Actions */}
+        <div className="flex justify-end gap-2 mb-4">
+          <button
+            onClick={() => setIsEditSetlistOpen(true)}
+            className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-secondary/80"
+            aria-label="Edit setlist"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <Link
+            href="/"
+            className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-secondary/80"
+            aria-label="Go home"
+          >
+            <Home className="w-4 h-4" />
+          </Link>
+        </div>
+
         <NamePromptDialog onNameSet={handleNameSet} />
         
         <PlaylistHeader
           playlist={playlist}
           songCount={promotedSongs.length}
-          onPlaylistUpdated={handlePlaylistUpdated}
           onShareClick={() => setIsShareOpen(true)}
         />
         
@@ -324,6 +346,21 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           open={isShareOpen}
           onOpenChange={setIsShareOpen}
           playlist={playlist}
+        />
+
+        <ExternalLinkDialog
+          open={isExternalLinkOpen}
+          onOpenChange={setIsExternalLinkOpen}
+          playlistId={playlist.id}
+          currentLink={playlist.external_link}
+          onLinkUpdated={(link) => handlePlaylistUpdated({ external_link: link })}
+        />
+
+        <EditSetlistDialog
+          open={isEditSetlistOpen}
+          onOpenChange={setIsEditSetlistOpen}
+          playlist={playlist}
+          onPlaylistUpdated={handlePlaylistUpdated}
         />
       </div>
 
