@@ -264,10 +264,15 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            Set Check - Free collaborative setlist builder
-          </p>
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-sm text-muted-foreground">
+          <span>Built by Category 5</span>
+          <span className="hidden sm:inline">·</span>
+          <a 
+            href="mailto:hello@category5.co" 
+            className="hover:text-foreground transition-colors"
+          >
+            Contact hello@category5.co
+          </a>
         </div>
       </footer>
     </main>
