@@ -78,8 +78,34 @@ export default function HomePage() {
     )
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Set Check",
+    "description": "A completely free way to collaborate on a setlist. Share songs, vote on them, and link to any music streamer.",
+    "url": "https://setcheck.app",
+    "applicationCategory": "MusicApplication",
+    "operatingSystem": "Any",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "Category 5",
+      "email": "hello@category5.co"
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background relative">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Music-themed background pattern */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
         <svg className="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
