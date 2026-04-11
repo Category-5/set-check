@@ -110,92 +110,191 @@ export function IdeaSongItem({
     day: "numeric",
   })
 
+  // Check if the current user is the one who added this song
+  const canRemove = currentUser && song.added_by === currentUser
+
   return (
     <>
-      <div className="group flex items-center gap-3 rounded-lg bg-background/50 p-3 transition-colors hover:bg-background/80">
-        {/* Thumbnail */}
-        <button
-          onClick={() => setIsLinksOpen(true)}
-          className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-muted"
-        >
-          {song.thumbnail_url ? (
-            <Image
-              src={song.thumbnail_url}
-              alt={song.title}
-              fill
-              className="object-cover"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <Music className="h-5 w-5 text-muted-foreground" />
-            </div>
-          )}
-        </button>
-
-        {/* Song info */}
-        <button
-          onClick={() => setIsLinksOpen(true)}
-          className="min-w-0 flex-1 text-left"
-        >
-          <p className="truncate font-medium text-foreground">{song.title}</p>
-          <p className="truncate text-sm text-muted-foreground">{song.artist}</p>
-        </button>
-
-        {/* Added at */}
-        <span className="hidden text-xs text-muted-foreground sm:block">{addedAt}</span>
-
-        {/* Vote Buttons */}
-        <VoteButtons songId={song.id} currentUser={currentUser} />
-
-        {/* Note indicator */}
-        <button
-          onClick={() => setIsNoteOpen(true)}
-          className={`relative rounded-full p-1 hover:bg-primary/10 ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
-          title={song.note ? "Has note" : "Add note"}
-        >
-          <MessageCircle className="h-4 w-4" />
-          {song.note && (
-            <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary" />
-          )}
-        </button>
-
-        {/* Promote button - only shown to creator */}
-        {isCreator && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePromote}
-            disabled={isPromoting}
-            className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+      <div className="group rounded-lg bg-card hover:bg-secondary/50 transition-colors p-3">
+        {/* Main Row */}
+        <div className="flex items-center gap-3">
+          {/* Thumbnail */}
+          <button
+            onClick={() => setIsLinksOpen(true)}
+            className="shrink-0 w-12 h-12 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all"
           >
-            <ArrowUp className="h-4 w-4" />
-            <span className="hidden sm:inline">Promote</span>
-          </Button>
-        )}
+            {song.thumbnail_url ? (
+              <Image
+                src={song.thumbnail_url}
+                alt={song.title}
+                fill
+                className="object-cover"
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Music className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+          </button>
 
-        {/* More options */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
-              <MoreHorizontal className="h-4 w-4" />
+          {/* Song info */}
+          <button
+            onClick={() => setIsLinksOpen(true)}
+            className="flex-1 min-w-0 text-left"
+          >
+            <p className="font-medium text-foreground truncate hover:underline">{song.title}</p>
+            <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
+          </button>
+
+          {/* Added at - Hidden on mobile */}
+          <span className="hidden sm:block text-xs text-muted-foreground">{addedAt}</span>
+
+          {/* Actions - Hidden on mobile, shown on desktop */}
+          <div className="hidden sm:flex items-center gap-1">
+            {/* Vote Buttons */}
+            <VoteButtons songId={song.id} currentUser={currentUser} />
+
+            {/* Note indicator */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsNoteOpen(true)}
+              className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
+            >
+              <MessageCircle className="h-4 w-4" />
+              {song.note && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+              )}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Open links
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              {song.note ? "Edit note" : "Add note"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Remove
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+
+            {/* Promote button - only shown to creator */}
+            {isCreator && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePromote}
+                disabled={isPromoting}
+                className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <ArrowUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Promote</span>
+              </Button>
+            )}
+
+            {/* Remove - only shown to the user who added the song */}
+            {canRemove && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowDeleteConfirm(true)
+                }}
+                className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* More options */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open links
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  {song.note ? "Edit note" : "Add note"}
+                </DropdownMenuItem>
+                {canRemove && (
+                  <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Remove
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Mobile Actions Row */}
+        <div className="flex sm:hidden items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50">
+          {/* Vote Buttons */}
+          <VoteButtons songId={song.id} currentUser={currentUser} />
+
+          {/* Note indicator */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsNoteOpen(true)}
+            className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground"}`}
+          >
+            <MessageCircle className="h-4 w-4" />
+            {song.note && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
+            )}
+          </Button>
+
+          {/* Promote button - only shown to creator */}
+          {isCreator && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePromote}
+              disabled={isPromoting}
+              className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* Remove - only shown to the user who added the song */}
+          {canRemove && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteConfirm(true)
+              }}
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+
+          {/* More options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Open links
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {song.note ? "Edit note" : "Add note"}
+              </DropdownMenuItem>
+              {canRemove && (
+                <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Delete Confirmation */}
