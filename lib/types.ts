@@ -23,6 +23,7 @@ export interface Song {
   added_by: string | null
   is_promoted: boolean
   platform_links: PlatformLinks
+  song_key: string
 }
 
 export interface Playlist {

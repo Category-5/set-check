@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -26,8 +26,39 @@ export function PlaylistHeader({
   const [name, setName] = useState(playlist.name)
   const [description, setDescription] = useState(playlist.description || "")
   const [isUploading, setIsUploading] = useState(false)
+  const [scrollScale, setScrollScale] = useState(1)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  // Handle scroll-based scaling for mobile only
+  useEffect(() => {
+    const handleScroll = () => {
+      // Only apply scaling on mobile (sm breakpoint is 640px)
+      if (window.innerWidth >= 640) {
+        setScrollScale(1)
+        return
+      }
+      const scrollY = window.scrollY
+      const maxScroll = 150 // Max scroll distance for full shrink
+      const minScale = 0.6 // Minimum scale
+      const scale = Math.max(minScale, 1 - (scrollY / maxScroll) * (1 - minScale))
+      setScrollScale(scale)
+    }
+
+    const handleResize = () => {
+      // Reset scale on resize to desktop
+      if (window.innerWidth >= 640) {
+        setScrollScale(1)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("resize", handleResize, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [])
 
   const handleSaveName = async () => {
     if (name.trim() === playlist.name) {
@@ -90,10 +121,13 @@ export function PlaylistHeader({
   }
 
   return (
-    <header className="flex flex-col gap-6 sm:flex-row sm:items-start">
-      {/* Cover Image */}
-      <div className="relative group shrink-0">
-        <div className="w-48 h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl">
+    <header className="flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-start">
+      {/* Cover Image - Centered on mobile with scroll shrinking */}
+      <div className="relative group shrink-0 flex justify-center sm:justify-start">
+        <div 
+          className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl transition-transform duration-150 origin-top"
+          style={{ transform: `scale(${scrollScale})` }}
+        >
           {playlist.cover_url ? (
             <img
               src={playlist.cover_url}
@@ -102,13 +136,14 @@ export function PlaylistHeader({
               crossOrigin="anonymous"
             />
           ) : (
-            <Music className="w-20 h-20 text-muted-foreground" />
+            <Music className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground" />
           )}
         </div>
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
+          style={{ transform: `scale(${scrollScale})` }}
         >
           <ImagePlus className="w-8 h-8 text-white" />
         </button>
@@ -121,8 +156,8 @@ export function PlaylistHeader({
         />
       </div>
 
-      {/* Info */}
-      <div className="flex-1 min-w-0">
+      {/* Info - Centered on mobile */}
+      <div className="flex-1 min-w-0 text-center sm:text-left">
         <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">
           Set Check
         </p>
@@ -160,9 +195,9 @@ export function PlaylistHeader({
         ) : (
           <button
             onClick={() => setIsEditingName(true)}
-            className="group/name flex items-center gap-2 text-left mb-2"
+            className="group/name flex items-center justify-center sm:justify-start gap-2 mb-2 w-full sm:w-auto"
           >
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground truncate text-balance">
+            <h1 className="text-2xl sm:text-4xl font-bold text-foreground truncate text-balance">
               {playlist.name}
             </h1>
             <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
@@ -204,7 +239,7 @@ export function PlaylistHeader({
         ) : (
           <button
             onClick={() => setIsEditingDescription(true)}
-            className="group/desc flex items-center gap-2 text-left mb-4"
+            className="group/desc flex items-center justify-center sm:justify-start gap-2 mb-4 w-full sm:w-auto"
           >
             <p className="text-muted-foreground text-sm">
               {playlist.description || "Add a description..."}
@@ -213,8 +248,8 @@ export function PlaylistHeader({
           </button>
         )}
 
-        {/* Stats & Actions */}
-        <div className="flex items-center gap-4">
+        {/* Stats & Actions - Centered on mobile */}
+        <div className="flex items-center justify-center sm:justify-start gap-4">
           <span className="text-sm text-muted-foreground">
             {songCount} {songCount === 1 ? "song" : "songs"}
           </span>

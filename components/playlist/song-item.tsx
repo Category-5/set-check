@@ -17,7 +17,23 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { formatDistanceToNow } from "date-fns"
 import { VoteButtons } from "./vote-buttons"
+import { createClient } from "@/lib/supabase/client"
 import type { Song } from "@/lib/types"
+
+// Key colors - each musical key gets a distinct color
+const KEY_COLORS: Record<string, { bg: string; text: string }> = {
+  A: { bg: "bg-red-500", text: "text-white" },
+  Bb: { bg: "bg-rose-400", text: "text-white" },
+  B: { bg: "bg-orange-500", text: "text-white" },
+  C: { bg: "bg-yellow-400", text: "text-yellow-900" },
+  D: { bg: "bg-green-500", text: "text-white" },
+  Eb: { bg: "bg-emerald-400", text: "text-white" },
+  E: { bg: "bg-teal-500", text: "text-white" },
+  F: { bg: "bg-blue-500", text: "text-white" },
+  G: { bg: "bg-purple-500", text: "text-white" },
+}
+
+const KEYS = ["A", "Bb", "B", "C", "D", "Eb", "E", "F", "G"]
 
 interface SongItemProps {
   song: Song
@@ -27,10 +43,34 @@ interface SongItemProps {
   onRemove: () => void
   onClick: () => void
   onNoteClick: () => void
+  onSongUpdated?: (song: Song) => void
 }
 
-export function SongItem({ song, index, currentUser, isCreator = false, onRemove, onClick, onNoteClick }: SongItemProps) {
+export function SongItem({ song, index, currentUser, isCreator = false, onRemove, onClick, onNoteClick, onSongUpdated }: SongItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [currentKey, setCurrentKey] = useState(song.song_key || "C")
+  const supabase = createClient()
+
+  const handleKeyClick = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const currentIndex = KEYS.indexOf(currentKey)
+    const nextIndex = (currentIndex + 1) % KEYS.length
+    const nextKey = KEYS[nextIndex]
+    
+    setCurrentKey(nextKey)
+    
+    // Update in database
+    const { error } = await supabase
+      .from("songs")
+      .update({ song_key: nextKey })
+      .eq("id", song.id)
+    
+    if (!error && onSongUpdated) {
+      onSongUpdated({ ...song, song_key: nextKey })
+    }
+  }
+
+  const keyColor = KEY_COLORS[currentKey] || KEY_COLORS.C
   
   const {
     attributes,
@@ -50,30 +90,32 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
     <div
       ref={setNodeRef}
       style={style}
-      className={`group p-3 rounded-lg bg-card hover:bg-secondary/50 transition-colors ${
-        isDragging ? "opacity-50 shadow-lg" : ""
+      className={`group p-2 sm:p-3 rounded-lg bg-card hover:bg-secondary/50 transition-colors ${
+        isDragging ? "opacity-50 shadow-lg z-50" : ""
       }`}
     >
       {/* Main Row */}
-      <div className="flex items-center gap-3">
-        {/* Drag Handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="touch-none text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
-        >
-          <GripVertical className="w-5 h-5" />
-        </button>
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Drag Handle - Only show for creator */}
+        {isCreator && (
+          <button
+            {...attributes}
+            {...listeners}
+            className="touch-none text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
+          >
+            <GripVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        )}
 
         {/* Index - Hidden on mobile */}
-        <span className="hidden sm:block w-6 text-center text-sm text-muted-foreground">
+        <span className="hidden sm:block w-5 text-center text-sm text-muted-foreground">
           {index + 1}
         </span>
 
         {/* Thumbnail */}
         <button
           onClick={onClick}
-          className="shrink-0 w-12 h-12 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all"
+          className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all"
         >
           {song.thumbnail_url ? (
             <img
@@ -83,16 +125,25 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
               crossOrigin="anonymous"
             />
           ) : (
-            <Music className="w-6 h-6 text-muted-foreground" />
+            <Music className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
           )}
+        </button>
+
+        {/* Key Badge */}
+        <button
+          onClick={handleKeyClick}
+          className={`shrink-0 px-1 py-0.5 min-w-[1.1rem] rounded text-[10px] sm:text-xs font-bold leading-none flex items-center justify-center transition-all hover:scale-110 hover:shadow-md ${keyColor.bg} ${keyColor.text}`}
+          title={`Key: ${currentKey} (click to change)`}
+        >
+          {currentKey}
         </button>
 
         {/* Info */}
         <button onClick={onClick} className="flex-1 min-w-0 text-left">
-          <p className="font-medium text-foreground truncate hover:underline">
+          <p className="font-medium text-sm sm:text-base text-foreground truncate hover:underline">
             {song.title}
           </p>
-          <p className="text-sm text-muted-foreground truncate">{song.artist}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{song.artist}</p>
         </button>
 
         {/* Added By & At - Hidden on mobile */}
