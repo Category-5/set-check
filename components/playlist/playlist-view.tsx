@@ -94,6 +94,8 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
     currentUser !== null && playlist.created_by !== null && currentUser === playlist.created_by,
     [currentUser, playlist.created_by]
   )
+  
+  console.log("[v0] isCreator check:", { currentUser, createdBy: playlist.created_by, isCreator })
 
   // Separate promoted songs (the Set) from ideas
   const promotedSongs = useMemo(() => 
