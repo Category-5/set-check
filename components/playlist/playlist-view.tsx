@@ -6,6 +6,7 @@ import { SongList } from "./song-list"
 import { IdeasSection } from "./ideas-section"
 import { AddSongDialog } from "./add-song-dialog"
 import { ShareDialog } from "./share-dialog"
+import { ExternalLinkDialog } from "./external-link-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import type { Playlist, Song } from "@/lib/types"
 import { ArrowUp, Home } from "lucide-react"
@@ -35,6 +36,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [songs, setSongs] = useState(initialSongs)
   const [isAddSongOpen, setIsAddSongOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isExternalLinkOpen, setIsExternalLinkOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<string | null>(null)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const supabase = createClient()
@@ -263,6 +265,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           songCount={promotedSongs.length}
           onPlaylistUpdated={handlePlaylistUpdated}
           onShareClick={() => setIsShareOpen(true)}
+          onExternalLinkClick={() => setIsExternalLinkOpen(true)}
         />
         
         {/* The Set - Main promoted songs */}
@@ -336,6 +339,14 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           open={isShareOpen}
           onOpenChange={setIsShareOpen}
           playlist={playlist}
+        />
+
+        <ExternalLinkDialog
+          open={isExternalLinkOpen}
+          onOpenChange={setIsExternalLinkOpen}
+          playlistId={playlist.id}
+          currentLink={playlist.external_link}
+          onLinkUpdated={(link) => handlePlaylistUpdated({ external_link: link })}
         />
       </div>
 

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { ExternalLink, Music, ImagePlus, Check, X, Pencil } from "lucide-react"
+import { ExternalLink, Music, ImagePlus, Check, X, Pencil, Link2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Playlist } from "@/lib/types"
 
@@ -13,6 +13,7 @@ interface PlaylistHeaderProps {
   songCount: number
   onPlaylistUpdated: (updated: Partial<Playlist>) => void
   onShareClick: () => void
+  onExternalLinkClick: () => void
 }
 
 export function PlaylistHeader({
@@ -20,6 +21,7 @@ export function PlaylistHeader({
   songCount,
   onPlaylistUpdated,
   onShareClick,
+  onExternalLinkClick,
 }: PlaylistHeaderProps) {
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
@@ -257,6 +259,24 @@ export function PlaylistHeader({
           <span className="text-sm text-muted-foreground">
             {songCount} {songCount === 1 ? "song" : "songs"}
           </span>
+          {playlist.external_link && (
+            <Button 
+              onClick={() => window.open(playlist.external_link!, '_blank')} 
+              size="icon" 
+              variant="outline"
+              className="rounded-full h-10 w-10"
+            >
+              <Link2 className="w-5 h-5" />
+            </Button>
+          )}
+          <Button 
+            onClick={onExternalLinkClick} 
+            size="sm" 
+            variant="ghost"
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {playlist.external_link ? "Edit Link" : "+ Add Link"}
+          </Button>
           <Button onClick={onShareClick} size="icon" className="rounded-full h-10 w-10">
             <ExternalLink className="w-5 h-5" />
           </Button>

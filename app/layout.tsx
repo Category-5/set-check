@@ -6,8 +6,8 @@ import './globals.css'
 const _rubik = Rubik({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Set check - Share Your Playlists',
-  description: 'Create and share playlists with friends. No account needed.',
+  title: 'Set Check - Share Your Setlists',
+  description: 'Create and share setlists with friends. No account needed.',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -31,6 +31,7 @@ export interface Playlist {
   name: string
   description: string | null
   cover_url: string | null
+  external_link: string | null
   created_at: string
   updated_at: string
   created_by: string | null

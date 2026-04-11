@@ -45,8 +45,8 @@ export default function HomePage() {
 
     const { error } = await supabase.from("playlists").insert({
       id: playlistId,
-      name: "My Playlist",
-      description: "A collaborative playlist",
+      name: "My Setlist",
+      description: "A collaborative setlist",
       created_by: username,
     })
 
@@ -99,7 +99,7 @@ export default function HomePage() {
             className="gap-2"
           >
             <Plus className="w-5 h-5" />
-            {isCreating ? "Creating..." : "Create New Playlist"}
+            {isCreating ? "Creating..." : "Create New Setlist"}
           </Button>
         </div>
 
@@ -149,10 +149,10 @@ export default function HomePage() {
           <section className="text-center py-16">
             <Music className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              No playlists yet
+              No setlists yet
             </h2>
             <p className="text-muted-foreground mb-6">
-              Create your first playlist to get started
+              Create your first setlist to get started
             </p>
           </section>
         )}
