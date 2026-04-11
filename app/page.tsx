@@ -79,7 +79,34 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background relative">
+      {/* Music-themed background pattern */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
+        <svg className="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="musicPattern" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+              {/* Music note */}
+              <path d="M30 20 L30 45 C30 50 25 55 20 55 C15 55 10 50 10 45 C10 40 15 35 20 35 C23 35 26 36 28 38 L28 20 L40 15 L40 20 Z" fill="currentColor" className="text-foreground"/>
+              {/* Sound wave bars */}
+              <rect x="60" y="30" width="4" height="20" rx="2" fill="currentColor" className="text-foreground"/>
+              <rect x="68" y="25" width="4" height="30" rx="2" fill="currentColor" className="text-foreground"/>
+              <rect x="76" y="20" width="4" height="40" rx="2" fill="currentColor" className="text-foreground"/>
+              <rect x="84" y="25" width="4" height="30" rx="2" fill="currentColor" className="text-foreground"/>
+              <rect x="92" y="30" width="4" height="20" rx="2" fill="currentColor" className="text-foreground"/>
+              {/* Vinyl record */}
+              <circle cx="30" cy="90" r="20" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground"/>
+              <circle cx="30" cy="90" r="8" fill="none" stroke="currentColor" strokeWidth="2" className="text-foreground"/>
+              <circle cx="30" cy="90" r="3" fill="currentColor" className="text-foreground"/>
+              {/* Headphones */}
+              <path d="M75 85 C75 75 85 70 95 70 C105 70 115 75 115 85" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-foreground"/>
+              <rect x="72" y="82" width="8" height="14" rx="3" fill="currentColor" className="text-foreground"/>
+              <rect x="110" y="82" width="8" height="14" rx="3" fill="currentColor" className="text-foreground"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#musicPattern)" />
+        </svg>
+      </div>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Background gradient accent */}
@@ -123,18 +150,11 @@ export default function HomePage() {
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 px-4">
-        <div className="max-w-4xl mx-auto rounded-2xl border border-border bg-card/80 p-8 sm:p-12 relative overflow-hidden">
-          {/* Subtle noise texture overlay */}
-          <div 
-            className="absolute inset-0 opacity-[0.03] pointer-events-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-            }}
-          />
+        <div className="max-w-4xl mx-auto rounded-2xl border border-border bg-card/90 backdrop-blur-sm p-8 sm:p-12 relative overflow-hidden">
           {/* Subtle gradient accent */}
           <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
           
-          <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
             <div className="text-center sm:text-left">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary mb-4">
                 <Users className="w-6 h-6" />
