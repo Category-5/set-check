@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Plus, Music, Clock, Users, Vote, Link2, ArrowRight } from "lucide-react"
+import { Music, Clock, Users, Vote, Link2, ArrowRight } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 
@@ -88,10 +88,10 @@ export default function HomePage() {
         <div className="relative max-w-5xl mx-auto px-4 pt-20 pb-16 sm:pt-32 sm:pb-24">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 border border-orange-500/20 px-4 py-1.5 text-sm font-medium text-orange-500 mb-8">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
               </span>
               100% Free, No Account Required
             </div>
@@ -114,7 +114,6 @@ export default function HomePage() {
               size="lg"
               className="h-14 px-8 text-lg gap-3 rounded-full shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
             >
-              <Plus className="w-5 h-5" />
               {isCreating ? "Creating..." : "Create a Setlist"}
               <ArrowRight className="w-5 h-5" />
             </Button>
