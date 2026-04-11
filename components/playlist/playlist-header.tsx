@@ -195,12 +195,14 @@ export function PlaylistHeader({
         ) : (
           <button
             onClick={() => setIsEditingName(true)}
-            className="group/name flex items-center justify-center sm:justify-start gap-2 mb-2 w-full sm:w-auto"
+            className="group/name mb-2 w-full sm:w-auto"
           >
-            <h1 className="text-2xl sm:text-4xl font-bold text-foreground truncate text-balance">
-              {playlist.name}
-            </h1>
-            <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-2xl sm:text-4xl font-bold text-foreground truncate text-balance">
+                {playlist.name}
+              </h1>
+              <Pencil className="w-4 h-4 text-muted-foreground opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
+            </div>
           </button>
         )}
 
@@ -239,12 +241,14 @@ export function PlaylistHeader({
         ) : (
           <button
             onClick={() => setIsEditingDescription(true)}
-            className="group/desc flex items-center justify-center sm:justify-start gap-2 mb-4 w-full sm:w-auto"
+            className="group/desc mb-4 w-full sm:w-auto"
           >
-            <p className="text-muted-foreground text-sm">
-              {playlist.description || "Add a description..."}
-            </p>
-            <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover/desc:opacity-100 transition-opacity shrink-0" />
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <p className="text-muted-foreground text-sm">
+                {playlist.description || "Add a description..."}
+              </p>
+              <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover/desc:opacity-100 transition-opacity shrink-0" />
+            </div>
           </button>
         )}
 
