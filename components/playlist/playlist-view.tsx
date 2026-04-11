@@ -8,7 +8,8 @@ import { AddSongDialog } from "./add-song-dialog"
 import { ShareDialog } from "./share-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import type { Playlist, Song } from "@/lib/types"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, Home } from "lucide-react"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import {
   DndContext,
@@ -244,6 +245,17 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
       onDragEnd={handleDragEnd}
     >
       <div className="mx-auto max-w-4xl px-2 sm:px-4 py-6 sm:py-8">
+        {/* Home Button */}
+        <div className="flex justify-end mb-4">
+          <Link
+            href="/"
+            className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+          >
+            <Home className="w-4 h-4" />
+            <span className="hidden sm:inline">Home</span>
+          </Link>
+        </div>
+
         <NamePromptDialog onNameSet={handleNameSet} />
         
         <PlaylistHeader

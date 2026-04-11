@@ -86,7 +86,7 @@ export default function HomePage() {
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-2">Set Check</h1>
           <p className="text-muted-foreground">
-            Create and share playlists with friends. No account needed.
+            A completely free way to collaborate on a setlist. No account needed. Share songs and vote on them, and then link to any music streamer.
           </p>
         </header>
 

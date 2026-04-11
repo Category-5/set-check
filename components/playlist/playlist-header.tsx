@@ -125,8 +125,8 @@ export function PlaylistHeader({
       {/* Cover Image - Centered on mobile with scroll shrinking */}
       <div className="relative group shrink-0 flex justify-center sm:justify-start">
         <div 
-          className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl transition-transform duration-150 origin-top"
-          style={{ transform: `scale(${scrollScale})` }}
+          className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl origin-top will-change-transform"
+          style={{ transform: `scale(${scrollScale})`, transition: 'none' }}
         >
           {playlist.cover_url ? (
             <img
@@ -142,8 +142,8 @@ export function PlaylistHeader({
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"
-          style={{ transform: `scale(${scrollScale})` }}
+          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg will-change-transform"
+          style={{ transform: `scale(${scrollScale})`, transformOrigin: 'top center', transition: 'none' }}
         >
           <ImagePlus className="w-8 h-8 text-white" />
         </button>
