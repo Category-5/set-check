@@ -300,7 +300,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-sm text-muted-foreground">
-          <span>Built by Category 5</span>
+          <span>Built by Category5</span>
           <span className="hidden sm:inline">·</span>
           <a 
             href="mailto:hello@category5.co" 
