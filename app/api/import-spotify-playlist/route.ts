@@ -165,9 +165,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch playlist from Spotify
+    // Fetch playlist from Spotify (without fields filter to ensure we get all data)
     const playlistResponse = await fetch(
-      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?fields=name,images,tracks(items(track(id,name,artists(name),album(name,images),external_urls)),next,total)`,
+      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
