@@ -188,7 +188,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const playlistData: SpotifyPlaylistResponse = await playlistResponse.json()
+    const playlistData = await playlistResponse.json()
+    
+    console.log("[v0] Spotify playlist response keys:", Object.keys(playlistData))
+    console.log("[v0] Tracks structure:", playlistData.tracks ? Object.keys(playlistData.tracks) : "no tracks key")
+
+    // Handle different API response structures
+    let trackItems: SpotifyTrack[] = []
+    if (playlistData.tracks?.items) {
+      // Standard structure: { tracks: { items: [...] } }
+      trackItems = playlistData.tracks.items
+    } else if (Array.isArray(playlistData.tracks)) {
+      // Alternative structure: { tracks: [...] }
+      trackItems = playlistData.tracks
+    } else if (playlistData.items) {
+      // Direct items structure
+      trackItems = playlistData.items
+    }
+    
+    console.log("[v0] Found track items:", trackItems.length)
 
     // Create the setlist in our database
     const supabase = await createClient()
@@ -212,7 +230,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process tracks and add them to the setlist
-    const tracks = playlistData.tracks.items.filter(item => item.track !== null)
+    const tracks = trackItems.filter(item => item.track !== null)
     const addedSongs: { title: string; artist: string; success: boolean }[] = []
     let position = 0
 
