@@ -165,9 +165,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch playlist metadata from Spotify
+    // Fetch playlist with tracks from Spotify
+    // Note: We need to include tracks.items in the fields to get track data
     const playlistResponse = await fetch(
-      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?fields=name,images,description`,
+      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?fields=name,images,description,tracks.items(track(id,name,artists(name),album(name,images),external_urls)),tracks.total,tracks.next`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -176,6 +177,10 @@ export async function POST(request: NextRequest) {
     )
 
     if (!playlistResponse.ok) {
+      console.log("[v0] Playlist fetch failed:", playlistResponse.status)
+      const errorText = await playlistResponse.text()
+      console.log("[v0] Error response:", errorText)
+      
       if (playlistResponse.status === 404) {
         return NextResponse.json(
           { error: "Playlist not found. Make sure the playlist is public." },
@@ -190,31 +195,12 @@ export async function POST(request: NextRequest) {
 
     const playlistData = await playlistResponse.json()
     
-    // Fetch tracks separately using the /tracks endpoint
-    const tracksResponse = await fetch(
-      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}/tracks?limit=100`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    )
+    console.log("[v0] Playlist response keys:", Object.keys(playlistData))
+    console.log("[v0] Tracks object:", playlistData.tracks ? Object.keys(playlistData.tracks) : "no tracks")
+    console.log("[v0] Tracks items count:", playlistData.tracks?.items?.length ?? "no items")
 
-    if (!tracksResponse.ok) {
-      console.log("[v0] Failed to fetch tracks:", tracksResponse.status)
-      return NextResponse.json(
-        { error: "Failed to fetch playlist tracks" },
-        { status: 500 }
-      )
-    }
-
-    const tracksData = await tracksResponse.json()
-    console.log("[v0] Tracks response keys:", Object.keys(tracksData))
-    console.log("[v0] Tracks items count:", tracksData.items?.length ?? "no items")
-    console.log("[v0] First track sample:", JSON.stringify(tracksData.items?.[0], null, 2)?.substring(0, 500))
-
-    // Get track items from the tracks endpoint response
-    const trackItems: SpotifyTrack[] = tracksData.items || []
+    // Get track items from the playlist response
+    const trackItems: SpotifyTrack[] = playlistData.tracks?.items || []
     
     console.log("[v0] Found track items:", trackItems.length)
 
