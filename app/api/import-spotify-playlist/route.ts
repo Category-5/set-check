@@ -165,21 +165,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch playlist with tracks from Spotify
-    // Note: We need to include tracks.items in the fields to get track data
-    const playlistResponse = await fetch(
-      `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?fields=name,images,description,tracks.items(track(id,name,artists(name),album(name,images),external_urls)),tracks.total,tracks.next`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    )
+    // Fetch playlist with tracks from Spotify - NO fields filter to get full response
+    const playlistApiUrl = `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}`
+    console.log("[v0] Fetching playlist from:", playlistApiUrl)
+    console.log("[v0] Playlist ID extracted:", spotifyPlaylistId)
+    console.log("[v0] Access token present:", !!accessToken)
+    
+    const playlistResponse = await fetch(playlistApiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    console.log("[v0] Playlist response status:", playlistResponse.status)
+    console.log("[v0] Playlist response headers:", JSON.stringify(Object.fromEntries(playlistResponse.headers.entries())))
 
     if (!playlistResponse.ok) {
       console.log("[v0] Playlist fetch failed:", playlistResponse.status)
       const errorText = await playlistResponse.text()
-      console.log("[v0] Error response:", errorText)
+      console.log("[v0] Error response body:", errorText)
       
       if (playlistResponse.status === 404) {
         return NextResponse.json(
@@ -193,16 +197,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const playlistData = await playlistResponse.json()
+    const rawResponseText = await playlistResponse.text()
+    console.log("[v0] Raw response length:", rawResponseText.length)
+    console.log("[v0] Raw response first 1000 chars:", rawResponseText.substring(0, 1000))
+    
+    const playlistData = JSON.parse(rawResponseText)
     
     console.log("[v0] Playlist response keys:", Object.keys(playlistData))
-    console.log("[v0] Tracks object:", playlistData.tracks ? Object.keys(playlistData.tracks) : "no tracks")
+    console.log("[v0] Playlist name:", playlistData.name)
+    console.log("[v0] Has tracks key:", "tracks" in playlistData)
+    console.log("[v0] Tracks type:", typeof playlistData.tracks)
+    console.log("[v0] Tracks object keys:", playlistData.tracks ? Object.keys(playlistData.tracks) : "no tracks object")
+    console.log("[v0] Tracks items exists:", !!playlistData.tracks?.items)
+    console.log("[v0] Tracks items type:", typeof playlistData.tracks?.items)
+    console.log("[v0] Tracks items is array:", Array.isArray(playlistData.tracks?.items))
     console.log("[v0] Tracks items count:", playlistData.tracks?.items?.length ?? "no items")
+    console.log("[v0] Tracks total:", playlistData.tracks?.total ?? "no total")
+    
+    if (playlistData.tracks?.items?.[0]) {
+      console.log("[v0] First track item:", JSON.stringify(playlistData.tracks.items[0], null, 2).substring(0, 500))
+    }
 
     // Get track items from the playlist response
     const trackItems: SpotifyTrack[] = playlistData.tracks?.items || []
     
-    console.log("[v0] Found track items:", trackItems.length)
+    console.log("[v0] Final track items count:", trackItems.length)
 
     // Create the setlist in our database
     const supabase = await createClient()
