@@ -192,6 +192,9 @@ export async function POST(request: NextRequest) {
     
     console.log("[v0] Spotify playlist response keys:", Object.keys(playlistData))
     console.log("[v0] Tracks structure:", playlistData.tracks ? Object.keys(playlistData.tracks) : "no tracks key")
+    console.log("[v0] Tracks items count:", playlistData.tracks?.items?.length ?? "no items")
+    console.log("[v0] Tracks total:", playlistData.tracks?.total ?? "no total")
+    console.log("[v0] First track sample:", JSON.stringify(playlistData.tracks?.items?.[0], null, 2)?.substring(0, 500))
 
     // Handle different API response structures
     let trackItems: SpotifyTrack[] = []
