@@ -165,9 +165,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // First, fetch playlist metadata
-    const playlistApiUrl = `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?fields=name,images,description`
-    console.log("[v0] Fetching playlist metadata from:", playlistApiUrl)
+    // Fetch full playlist data (no fields parameter to ensure tracks are included)
+    // Adding market=US to ensure track data is playable
+    const playlistApiUrl = `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?market=US`
+    console.log("[v0] Fetching full playlist from:", playlistApiUrl)
     
     const playlistResponse = await fetch(playlistApiUrl, {
       headers: {
@@ -175,8 +176,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log("[v0] Playlist response status:", playlistResponse.status)
+    
     if (!playlistResponse.ok) {
-      console.log("[v0] Playlist fetch failed:", playlistResponse.status)
+      const errorText = await playlistResponse.text()
+      console.log("[v0] Playlist fetch failed:", playlistResponse.status, errorText)
       if (playlistResponse.status === 404) {
         return NextResponse.json(
           { error: "Playlist not found. Make sure the playlist is public." },
@@ -191,39 +195,21 @@ export async function POST(request: NextRequest) {
 
     const playlistData = await playlistResponse.json()
     console.log("[v0] Playlist name:", playlistData.name)
-
-    // Now fetch tracks separately with market parameter (required for Client Credentials)
-    const tracksApiUrl = `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}/tracks?market=US&limit=100&fields=items(track(id,name,artists(name),album(name,images),external_urls)),total,next`
-    console.log("[v0] Fetching tracks from:", tracksApiUrl)
+    console.log("[v0] Playlist response keys:", Object.keys(playlistData))
+    console.log("[v0] Has tracks:", !!playlistData.tracks)
+    console.log("[v0] Tracks type:", typeof playlistData.tracks)
     
-    const tracksResponse = await fetch(tracksApiUrl, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-
-    console.log("[v0] Tracks response status:", tracksResponse.status)
-
-    if (!tracksResponse.ok) {
-      const errorText = await tracksResponse.text()
-      console.log("[v0] Tracks fetch failed:", tracksResponse.status, errorText)
-      return NextResponse.json(
-        { error: "Failed to fetch playlist tracks. Make sure the playlist is public." },
-        { status: 500 }
-      )
+    if (playlistData.tracks) {
+      console.log("[v0] Tracks keys:", Object.keys(playlistData.tracks))
+      console.log("[v0] Tracks items count:", playlistData.tracks.items?.length ?? "no items")
+      console.log("[v0] Tracks total:", playlistData.tracks.total ?? "no total")
+      if (playlistData.tracks.items?.[0]) {
+        console.log("[v0] First track:", JSON.stringify(playlistData.tracks.items[0], null, 2).substring(0, 500))
+      }
     }
 
-    const tracksData = await tracksResponse.json()
-    console.log("[v0] Tracks response keys:", Object.keys(tracksData))
-    console.log("[v0] Tracks items count:", tracksData.items?.length ?? "no items")
-    console.log("[v0] Tracks total:", tracksData.total ?? "no total")
-    
-    if (tracksData.items?.[0]) {
-      console.log("[v0] First track item:", JSON.stringify(tracksData.items[0], null, 2).substring(0, 500))
-    }
-
-    // Get track items from the tracks response
-    const trackItems: SpotifyTrack[] = tracksData.items || []
+    // Get track items from the playlist response
+    const trackItems: SpotifyTrack[] = playlistData.tracks?.items || []
     
     console.log("[v0] Final track items count:", trackItems.length)
 
