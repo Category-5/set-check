@@ -3,61 +3,42 @@ import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
 import type { OdesliResponse } from "@/lib/types"
 
-const SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
-const SPOTIFY_API_BASE = "https://api.spotify.com/v1"
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
 // Rate limiting: delay between Odesli API calls to avoid 429
 const ODESLI_DELAY_MS = 300
 
-interface SpotifyTrack {
-  track: {
-    id: string
+interface SpotifyEmbedTrack {
+  uri: string
+  uid: string
+  title: string
+  subtitle: string
+  isExplicit: boolean
+  duration: number
+  isPlayable: boolean
+  album?: {
     name: string
-    artists: { name: string }[]
-    album: {
-      name: string
-      images: { url: string }[]
-    }
-    external_urls: {
-      spotify: string
-    }
-  } | null
+    uri: string
+  }
+  artists?: {
+    name: string
+    uri: string
+  }[]
+  images?: {
+    url: string
+    width: number
+    height: number
+  }[]
 }
 
-interface SpotifyPlaylistResponse {
+interface SpotifyEmbedResponse {
+  type: string
   name: string
-  images: { url: string }[]
-  tracks: {
-    items: SpotifyTrack[]
-    next: string | null
-    total: number
+  images?: { url: string }[]
+  coverArt?: { sources: { url: string }[] }
+  tracks?: {
+    items: SpotifyEmbedTrack[]
   }
-}
-
-async function getSpotifyAccessToken(): Promise<string> {
-  const clientId = process.env.SPOTIFY_CLIENT_ID
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET
-
-  if (!clientId || !clientSecret) {
-    throw new Error("Spotify credentials not configured")
-  }
-
-  const response = await fetch(SPOTIFY_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
-    },
-    body: "grant_type=client_credentials",
-  })
-
-  if (!response.ok) {
-    throw new Error("Failed to get Spotify access token")
-  }
-
-  const data = await response.json()
-  return data.access_token
 }
 
 function extractPlaylistId(url: string): string | null {
@@ -72,6 +53,15 @@ function extractPlaylistId(url: string): string | null {
   if (uriMatch) return uriMatch[1]
 
   return null
+}
+
+function spotifyUriToUrl(uri: string): string {
+  // Convert spotify:track:xxx to https://open.spotify.com/track/xxx
+  const parts = uri.split(":")
+  if (parts.length === 3) {
+    return `https://open.spotify.com/${parts[1]}/${parts[2]}`
+  }
+  return uri
 }
 
 async function fetchOdesliData(spotifyUrl: string): Promise<OdesliResponse | null> {
@@ -154,74 +144,89 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get Spotify access token
-    let accessToken: string
-    try {
-      accessToken = await getSpotifyAccessToken()
-    } catch {
-      return NextResponse.json(
-        { error: "Spotify integration not configured. Please add SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET." },
-        { status: 500 }
-      )
-    }
-
-    // Fetch full playlist data (no fields parameter to ensure tracks are included)
-    // Adding market=US to ensure track data is playable
-    const playlistApiUrl = `${SPOTIFY_API_BASE}/playlists/${spotifyPlaylistId}?market=US`
-    console.log("[v0] Fetching full playlist from:", playlistApiUrl)
+    // Use Spotify's embed endpoint which doesn't require authentication
+    const embedUrl = `https://open.spotify.com/embed/playlist/${spotifyPlaylistId}`
+    console.log("[v0] Fetching embed page:", embedUrl)
     
-    const playlistResponse = await fetch(playlistApiUrl, {
+    // Fetch the embed HTML page
+    const embedResponse = await fetch(embedUrl, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
       },
     })
 
-    console.log("[v0] Playlist response status:", playlistResponse.status)
-    
-    if (!playlistResponse.ok) {
-      const errorText = await playlistResponse.text()
-      console.log("[v0] Playlist fetch failed:", playlistResponse.status, errorText)
-      if (playlistResponse.status === 404) {
-        return NextResponse.json(
-          { error: "Playlist not found. Make sure the playlist is public." },
-          { status: 404 }
-        )
-      }
+    if (!embedResponse.ok) {
+      console.log("[v0] Embed fetch failed:", embedResponse.status)
       return NextResponse.json(
-        { error: "Failed to fetch Spotify playlist" },
+        { error: "Failed to fetch playlist. Make sure the playlist is public." },
         { status: 500 }
       )
     }
 
-    const playlistData = await playlistResponse.json()
-    console.log("[v0] Playlist name:", playlistData.name)
-    console.log("[v0] Playlist response keys:", Object.keys(playlistData))
-    console.log("[v0] Has tracks:", !!playlistData.tracks)
-    console.log("[v0] Tracks type:", typeof playlistData.tracks)
+    const embedHtml = await embedResponse.text()
     
-    if (playlistData.tracks) {
-      console.log("[v0] Tracks keys:", Object.keys(playlistData.tracks))
-      console.log("[v0] Tracks items count:", playlistData.tracks.items?.length ?? "no items")
-      console.log("[v0] Tracks total:", playlistData.tracks.total ?? "no total")
-      if (playlistData.tracks.items?.[0]) {
-        console.log("[v0] First track:", JSON.stringify(playlistData.tracks.items[0], null, 2).substring(0, 500))
-      }
+    // Extract the __NEXT_DATA__ JSON from the embed page
+    const scriptMatch = embedHtml.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)
+    
+    if (!scriptMatch) {
+      console.log("[v0] Could not find __NEXT_DATA__ in embed page")
+      console.log("[v0] HTML length:", embedHtml.length)
+      console.log("[v0] HTML snippet:", embedHtml.substring(0, 500))
+      return NextResponse.json(
+        { error: "Failed to parse playlist data" },
+        { status: 500 }
+      )
     }
 
-    // Get track items from the playlist response
-    const trackItems: SpotifyTrack[] = playlistData.tracks?.items || []
-    
-    console.log("[v0] Final track items count:", trackItems.length)
+    let nextData: { props?: { pageProps?: { state?: { data?: { entity?: SpotifyEmbedResponse } } } } }
+    try {
+      nextData = JSON.parse(scriptMatch[1])
+    } catch {
+      console.log("[v0] Failed to parse __NEXT_DATA__")
+      return NextResponse.json(
+        { error: "Failed to parse playlist data" },
+        { status: 500 }
+      )
+    }
+
+    const playlistData = nextData?.props?.pageProps?.state?.data?.entity
+    console.log("[v0] Playlist data found:", !!playlistData)
+    console.log("[v0] Playlist name:", playlistData?.name)
+    console.log("[v0] Track count:", playlistData?.tracks?.items?.length)
+
+    if (!playlistData) {
+      console.log("[v0] No playlist data in response")
+      console.log("[v0] Next data keys:", Object.keys(nextData || {}))
+      return NextResponse.json(
+        { error: "Failed to extract playlist data" },
+        { status: 500 }
+      )
+    }
+
+    const trackItems = playlistData.tracks?.items || []
+    console.log("[v0] Found tracks:", trackItems.length)
+
+    if (trackItems.length === 0) {
+      return NextResponse.json(
+        { error: "No tracks found in playlist" },
+        { status: 400 }
+      )
+    }
 
     // Create the setlist in our database
     const supabase = await createClient()
     const newPlaylistId = nanoid(10)
 
+    const coverUrl = playlistData.coverArt?.sources?.[0]?.url || 
+                     playlistData.images?.[0]?.url || 
+                     null
+
     const { error: createError } = await supabase.from("playlists").insert({
       id: newPlaylistId,
       name: playlistData.name || "Imported Setlist",
       description: `Imported from Spotify`,
-      cover_url: playlistData.images?.[0]?.url || null,
+      cover_url: coverUrl,
       created_by: createdBy,
       external_link: playlistUrl,
     })
@@ -235,26 +240,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Process tracks and add them to the setlist
-    const tracks = trackItems.filter(item => item.track !== null)
     const addedSongs: { title: string; artist: string; success: boolean }[] = []
     let position = 0
 
-    for (const item of tracks) {
-      if (!item.track) continue
+    for (const track of trackItems) {
+      if (!track.uri) continue
 
-      const spotifyUrl = item.track.external_urls.spotify
+      const spotifyUrl = spotifyUriToUrl(track.uri)
       
       // Fetch magic links from Odesli
       const odesliData = await fetchOdesliData(spotifyUrl)
       
-      // Prepare song data - use Odesli data if available, otherwise use Spotify data
+      // Get artist name from track data
+      const artistName = track.subtitle || 
+                         track.artists?.map(a => a.name).join(", ") || 
+                         "Unknown Artist"
+
+      // Get thumbnail from track images or album
+      const thumbnailUrl = track.images?.[0]?.url || null
+
+      // Prepare song data - use Odesli data if available, otherwise use embed data
       const songData = {
         id: nanoid(10),
         playlist_id: newPlaylistId,
-        title: odesliData?.title || item.track.name,
-        artist: odesliData?.artistName || item.track.artists.map(a => a.name).join(", "),
-        album: odesliData?.album || item.track.album.name || null,
-        thumbnail_url: odesliData?.thumbnailUrl || item.track.album.images?.[0]?.url || null,
+        title: odesliData?.title || track.title,
+        artist: odesliData?.artistName || artistName,
+        album: odesliData?.album || track.album?.name || null,
+        thumbnail_url: odesliData?.thumbnailUrl || thumbnailUrl,
         platform_links: odesliData?.platformLinks || { spotify: spotifyUrl },
         position,
         added_by: createdBy || null,
@@ -282,7 +294,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       playlistId: newPlaylistId,
       playlistName: playlistData.name,
-      totalTracks: tracks.length,
+      totalTracks: trackItems.length,
       addedTracks: successCount,
       songs: addedSongs,
     })
