@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    let nextData: { props?: { pageProps?: { state?: { data?: { entity?: SpotifyEmbedResponse } } } } }
+    let nextData: Record<string, unknown>
     try {
       nextData = JSON.parse(scriptMatch[1])
     } catch {
@@ -190,14 +190,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const playlistData = nextData?.props?.pageProps?.state?.data?.entity
+    // Log the full structure to understand where the data is
+    console.log("[v0] Next data top keys:", Object.keys(nextData))
+    console.log("[v0] Props keys:", Object.keys(nextData.props || {}))
+    const pageProps = (nextData.props as Record<string, unknown>)?.pageProps as Record<string, unknown>
+    console.log("[v0] PageProps keys:", Object.keys(pageProps || {}))
+    console.log("[v0] PageProps content (truncated):", JSON.stringify(pageProps, null, 2).substring(0, 2000))
+    
+    // Try different possible paths to find the playlist data
+    let playlistData: SpotifyEmbedResponse | null = null
+    
+    // Path 1: state.data.entity
+    const state = pageProps?.state as Record<string, unknown>
+    if (state?.data) {
+      console.log("[v0] state.data keys:", Object.keys(state.data as object))
+      playlistData = (state.data as Record<string, unknown>)?.entity as SpotifyEmbedResponse
+    }
+    
+    // Path 2: Direct pageProps
+    if (!playlistData && pageProps?.name) {
+      playlistData = pageProps as unknown as SpotifyEmbedResponse
+    }
+    
+    // Path 3: pageProps.data
+    if (!playlistData && pageProps?.data) {
+      console.log("[v0] pageProps.data keys:", Object.keys(pageProps.data as object))
+      playlistData = pageProps.data as SpotifyEmbedResponse
+    }
+
+    // Path 4: state.item
+    if (!playlistData && state?.item) {
+      console.log("[v0] state.item found")
+      playlistData = state.item as SpotifyEmbedResponse
+    }
+    
     console.log("[v0] Playlist data found:", !!playlistData)
     console.log("[v0] Playlist name:", playlistData?.name)
+    console.log("[v0] Playlist type:", playlistData?.type)
+    console.log("[v0] Playlist keys:", playlistData ? Object.keys(playlistData) : "none")
+    console.log("[v0] Has tracks:", !!playlistData?.tracks)
     console.log("[v0] Track count:", playlistData?.tracks?.items?.length)
 
     if (!playlistData) {
-      console.log("[v0] No playlist data in response")
-      console.log("[v0] Next data keys:", Object.keys(nextData || {}))
+      console.log("[v0] No playlist data found in any path")
       return NextResponse.json(
         { error: "Failed to extract playlist data" },
         { status: 500 }
