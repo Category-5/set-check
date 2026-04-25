@@ -1,3 +1,26 @@
+/**
+ * Spotify Playlist Import API
+ * 
+ * IMPORTANT: This uses Spotify's PUBLIC EMBED endpoint, NOT the official Spotify API.
+ * 
+ * Why not use the Spotify API?
+ * - The Spotify API with Client Credentials Flow (app-only auth) returns 403 Forbidden
+ *   when trying to access playlist tracks via the /playlists/{id}/tracks endpoint.
+ * - The main /playlists/{id} endpoint also does NOT include tracks in the response
+ *   when using Client Credentials Flow (as of 2026).
+ * - User OAuth would require users to log in with Spotify, which is not needed for
+ *   importing public playlists.
+ * 
+ * Solution: Fetch Spotify's embed page (open.spotify.com/embed/playlist/{id})
+ * The embed page contains a __NEXT_DATA__ script tag with all playlist data including tracks.
+ * This is publicly accessible and doesn't require authentication.
+ * 
+ * Track data location in __NEXT_DATA__:
+ * - Path: props.pageProps.state.data.entity
+ * - Tracks are in the `trackList` property (NOT `tracks.items`)
+ * - Each track has: uri, title, subtitle (artist), album, images, duration, etc.
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
@@ -147,7 +170,6 @@ export async function POST(request: NextRequest) {
 
     // Use Spotify's embed endpoint which doesn't require authentication
     const embedUrl = `https://open.spotify.com/embed/playlist/${spotifyPlaylistId}`
-    console.log("[v0] Fetching embed page:", embedUrl)
     
     // Fetch the embed HTML page
     const embedResponse = await fetch(embedUrl, {
@@ -158,7 +180,6 @@ export async function POST(request: NextRequest) {
     })
 
     if (!embedResponse.ok) {
-      console.log("[v0] Embed fetch failed:", embedResponse.status)
       return NextResponse.json(
         { error: "Failed to fetch playlist. Make sure the playlist is public." },
         { status: 500 }
@@ -171,9 +192,6 @@ export async function POST(request: NextRequest) {
     const scriptMatch = embedHtml.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)
     
     if (!scriptMatch) {
-      console.log("[v0] Could not find __NEXT_DATA__ in embed page")
-      console.log("[v0] HTML length:", embedHtml.length)
-      console.log("[v0] HTML snippet:", embedHtml.substring(0, 500))
       return NextResponse.json(
         { error: "Failed to parse playlist data" },
         { status: 500 }
@@ -184,27 +202,21 @@ export async function POST(request: NextRequest) {
     try {
       nextData = JSON.parse(scriptMatch[1])
     } catch {
-      console.log("[v0] Failed to parse __NEXT_DATA__")
       return NextResponse.json(
         { error: "Failed to parse playlist data" },
         { status: 500 }
       )
     }
 
-    // Log the full structure to understand where the data is
-    console.log("[v0] Next data top keys:", Object.keys(nextData))
-    console.log("[v0] Props keys:", Object.keys(nextData.props || {}))
+    // Extract pageProps from the Next.js data structure
     const pageProps = (nextData.props as Record<string, unknown>)?.pageProps as Record<string, unknown>
-    console.log("[v0] PageProps keys:", Object.keys(pageProps || {}))
-    console.log("[v0] PageProps content (truncated):", JSON.stringify(pageProps, null, 2).substring(0, 2000))
     
-    // Try different possible paths to find the playlist data
+    // Try different possible paths to find the playlist data (Spotify's structure may vary)
     let playlistData: SpotifyEmbedResponse | null = null
     
-    // Path 1: state.data.entity
+    // Path 1: state.data.entity (primary path for Spotify embeds)
     const state = pageProps?.state as Record<string, unknown>
     if (state?.data) {
-      console.log("[v0] state.data keys:", Object.keys(state.data as object))
       playlistData = (state.data as Record<string, unknown>)?.entity as SpotifyEmbedResponse
     }
     
@@ -242,7 +254,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Try trackList first (new Spotify embed format), then tracks.items (old format)
+    // IMPORTANT: Spotify embed uses `trackList` (array on entity) NOT `tracks.items`
+    // This was the key fix - the Spotify embed format changed and tracks are now in trackList
     const trackItems = playlistData.trackList || playlistData.tracks?.items || []
     console.log("[v0] Found tracks:", trackItems.length)
 

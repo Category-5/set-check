@@ -103,7 +103,7 @@ export function ImportSpotifyDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <svg className="w-5 h-5 text-[#1DB954]" viewBox="0 0 24 24" fill="currentColor">
@@ -165,7 +165,7 @@ export function ImportSpotifyDialog({
               </p>
             </>
           ) : (
-            <div className="space-y-4">
+<div className="space-y-4 overflow-hidden flex-1 flex flex-col min-h-0">
               <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <Check className="w-5 h-5 text-emerald-500" />
@@ -179,24 +179,24 @@ export function ImportSpotifyDialog({
               </div>
 
               {result.songs.length > 0 && (
-                <div className="max-h-48 overflow-y-auto space-y-1 rounded-lg border border-border p-2">
-                  {result.songs.slice(0, 10).map((song, index) => (
+                <div className="flex-1 min-h-0 max-h-64 overflow-y-auto space-y-1 rounded-lg border border-border p-2">
+                  {result.songs.slice(0, 20).map((song, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 py-1.5 px-2 text-sm"
+                      className="flex items-center gap-2 py-1.5 px-2 text-sm min-w-0"
                     >
                       {song.success ? (
                         <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                       ) : (
                         <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
                       )}
-                      <span className="truncate text-foreground">{song.title}</span>
-                      <span className="text-muted-foreground truncate">- {song.artist}</span>
+                      <span className="truncate flex-1 min-w-0 text-foreground">{song.title}</span>
+                      <span className="text-muted-foreground truncate shrink-0 max-w-[40%]">- {song.artist}</span>
                     </div>
                   ))}
-                  {result.songs.length > 10 && (
+                  {result.songs.length > 20 && (
                     <p className="text-xs text-muted-foreground text-center py-2">
-                      +{result.songs.length - 10} more songs
+                      +{result.songs.length - 20} more songs
                     </p>
                   )}
                 </div>
