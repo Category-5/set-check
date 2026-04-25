@@ -39,6 +39,7 @@ interface SpotifyEmbedResponse {
   tracks?: {
     items: SpotifyEmbedTrack[]
   }
+  trackList?: SpotifyEmbedTrack[]
 }
 
 function extractPlaylistId(url: string): string | null {
@@ -228,6 +229,8 @@ export async function POST(request: NextRequest) {
     console.log("[v0] Playlist name:", playlistData?.name)
     console.log("[v0] Playlist type:", playlistData?.type)
     console.log("[v0] Playlist keys:", playlistData ? Object.keys(playlistData) : "none")
+    console.log("[v0] Has trackList:", !!playlistData?.trackList)
+    console.log("[v0] TrackList count:", playlistData?.trackList?.length)
     console.log("[v0] Has tracks:", !!playlistData?.tracks)
     console.log("[v0] Track count:", playlistData?.tracks?.items?.length)
 
@@ -239,7 +242,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const trackItems = playlistData.tracks?.items || []
+    // Try trackList first (new Spotify embed format), then tracks.items (old format)
+    const trackItems = playlistData.trackList || playlistData.tracks?.items || []
     console.log("[v0] Found tracks:", trackItems.length)
 
     if (trackItems.length === 0) {
