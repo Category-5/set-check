@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
 import type { OdesliResponse } from "@/lib/types"
+import { ensureSpotifyLink } from "@/lib/spotify"
 
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
@@ -79,6 +80,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const title = entity.title || "Unknown Title"
+    const artist = entity.artistName || "Unknown Artist"
+
+    await ensureSpotifyLink(platformLinks, title, artist)
+
     const songId = nanoid(10)
     const supabase = await createClient()
 
@@ -87,8 +93,8 @@ export async function POST(request: NextRequest) {
       .insert({
         id: songId,
         original_url: url,
-        title: entity.title || "Unknown Title",
-        artist: entity.artistName || "Unknown Artist",
+        title,
+        artist,
         album: entity.albumName || null,
         thumbnail_url: entity.thumbnailUrl || null,
         platform_links: platformLinks,
@@ -104,8 +110,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       id: songId,
-      title: entity.title || "Unknown Title",
-      artist: entity.artistName || "Unknown Artist",
+      title,
+      artist,
       thumbnail_url: entity.thumbnailUrl || null,
     })
   } catch (error) {

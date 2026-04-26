@@ -180,6 +180,7 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Remove song"
               onClick={(e) => {
                 e.stopPropagation()
                 setShowDeleteConfirm(true)
@@ -227,6 +228,7 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Remove song"
               onClick={(e) => {
                 e.stopPropagation()
                 setShowDeleteConfirm(true)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { OdesliResponse } from "@/lib/types"
+import { ensureSpotifyLink } from "@/lib/spotify"
 
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
@@ -76,9 +77,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const title = entity.title || "Unknown Title"
+    const artistName = entity.artistName || "Unknown Artist"
+
+    await ensureSpotifyLink(platformLinks, title, artistName)
+
     const result: OdesliResponse = {
-      title: entity.title || "Unknown Title",
-      artistName: entity.artistName || "Unknown Artist",
+      title,
+      artistName,
       thumbnailUrl: entity.thumbnailUrl || null,
       platformLinks,
       odesliUrl: data.pageUrl || null,
