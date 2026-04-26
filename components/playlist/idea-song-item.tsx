@@ -204,6 +204,7 @@ export function IdeaSongItem({
               <Button
                 variant="outline"
                 size="sm"
+                aria-label="Promote song"
                 onClick={handlePromote}
                 disabled={isPromoting}
                 className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
@@ -218,6 +219,7 @@ export function IdeaSongItem({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Remove song"
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowDeleteConfirm(true)
@@ -278,6 +280,7 @@ export function IdeaSongItem({
             <Button
               variant="outline"
               size="sm"
+              aria-label="Promote song"
               onClick={handlePromote}
               disabled={isPromoting}
               className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
@@ -291,6 +294,7 @@ export function IdeaSongItem({
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Remove song"
               onClick={(e) => {
                 e.stopPropagation()
                 setShowDeleteConfirm(true)

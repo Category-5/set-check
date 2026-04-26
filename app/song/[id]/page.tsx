@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
-import { Music, ExternalLink, ArrowLeft } from "lucide-react"
+import { Music, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { Logo } from "@/components/logo"
 import type { Metadata } from "next"
 
 interface PlatformLinks {
@@ -89,10 +90,11 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-4 py-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to SetCheck</span>
-        </Link>
+        <div className="flex justify-center mb-8">
+          <Link href="/">
+            <Logo size={48} />
+          </Link>
+        </div>
 
         <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
           {/* Song Info */}

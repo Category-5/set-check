@@ -311,6 +311,12 @@ export async function POST(request: NextRequest) {
       // Get thumbnail from track images or album
       const thumbnailUrl = track.images?.[0]?.url || null
 
+      // Source URL is always Spotify here, so guarantee the spotify link
+      // even if Odesli's response omitted it.
+      const platformLinks = odesliData?.platformLinks
+        ? { ...odesliData.platformLinks, spotify: odesliData.platformLinks.spotify || spotifyUrl }
+        : { spotify: spotifyUrl }
+
       // Prepare song data - use Odesli data if available, otherwise use embed data
       const songData = {
         id: nanoid(10),
@@ -319,7 +325,7 @@ export async function POST(request: NextRequest) {
         artist: odesliData?.artistName || artistName,
         album: odesliData?.album || track.album?.name || null,
         thumbnail_url: odesliData?.thumbnailUrl || thumbnailUrl,
-        platform_links: odesliData?.platformLinks || { spotify: spotifyUrl },
+        platform_links: platformLinks,
         position,
         added_by: createdBy || null,
         is_promoted: true, // Imported songs go directly to setlist

@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2, Music, Check, AlertCircle, Copy, Link2 } from "lucide-react"
+import { SHARED_SONGS_KEY } from "@/lib/constants"
 
 interface ShareSongDialogProps {
   open: boolean
@@ -52,6 +53,18 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
 
       const data: ShareResult = await response.json()
       setResult(data)
+
+      // Persist to recently shared songs in localStorage
+      try {
+        const existing = JSON.parse(localStorage.getItem(SHARED_SONGS_KEY) || "[]") as Array<ShareResult & { sharedAt: number }>
+        const updated = [
+          { ...data, sharedAt: Date.now() },
+          ...existing.filter((s) => s.id !== data.id),
+        ].slice(0, 20)
+        localStorage.setItem(SHARED_SONGS_KEY, JSON.stringify(updated))
+      } catch {
+        // localStorage unavailable, ignore
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create share link")
     } finally {

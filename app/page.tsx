@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Music, Clock, Users, Vote, Link2, ArrowRight, Download } from "lucide-react"
+import { Music, Clock, Users, Vote, Link2, ArrowRight, Download, Copy, Check, ArrowDown } from "lucide-react"
 import { Logo } from "@/components/logo"
 import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 import { ImportSpotifyDialog } from "@/components/import-spotify-dialog"
 import { ShareSongDialog } from "@/components/share-song-dialog"
+import { RECENT_PLAYLISTS_KEY, SHARED_SONGS_KEY } from "@/lib/constants"
 
 interface RecentPlaylist {
   id: string
@@ -17,15 +18,34 @@ interface RecentPlaylist {
   viewedAt: number
 }
 
-const RECENT_PLAYLISTS_KEY = "set-check-recent-playlists"
+interface RecentSharedSong {
+  id: string
+  title: string
+  artist: string
+  thumbnail_url: string | null
+  sharedAt: number
+}
+
 
 export default function HomePage() {
   const router = useRouter()
   const [recentPlaylists, setRecentPlaylists] = useState<RecentPlaylist[]>([])
+  const [recentSharedSongs, setRecentSharedSongs] = useState<RecentSharedSong[]>([])
   const [isCreating, setIsCreating] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [showShareSongDialog, setShowShareSongDialog] = useState(false)
+  const [copiedSongId, setCopiedSongId] = useState<string | null>(null)
+
+  const loadSharedSongs = useCallback(() => {
+    const raw = localStorage.getItem(SHARED_SONGS_KEY)
+    if (!raw) return
+    try {
+      setRecentSharedSongs(JSON.parse(raw) as RecentSharedSong[])
+    } catch {
+      // ignore
+    }
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
@@ -38,7 +58,28 @@ export default function HomePage() {
         // Invalid JSON, ignore
       }
     }
+    loadSharedSongs()
     setIsLoaded(true)
+  }, [loadSharedSongs])
+
+  const copySongUrl = useCallback(async (id: string) => {
+    const url = `${window.location.origin}/song/${id}`
+    try {
+      await navigator.clipboard.writeText(url)
+    } catch {
+      const ta = document.createElement("textarea")
+      ta.value = url
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand("copy")
+      document.body.removeChild(ta)
+    }
+    setCopiedSongId(id)
+    setTimeout(() => setCopiedSongId(null), 2000)
+  }, [])
+
+  const scrollToSets = useCallback(() => {
+    document.getElementById("my-sets")?.scrollIntoView({ behavior: "smooth" })
   }, [])
 
   const createNewPlaylist = async () => {
@@ -116,6 +157,15 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Logo size={40} />
           <span className="text-lg font-semibold text-foreground">Set Check</span>
+          <div className="ml-auto mr-4">
+            <button
+              onClick={scrollToSets}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              My Sets
+              <ArrowDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -265,7 +315,7 @@ export default function HomePage() {
 
       {/* Recent Playlists Section */}
       {recentPlaylists.length > 0 && (
-        <section className="border-t border-border">
+        <section id="my-sets" className="border-t border-border scroll-mt-20">
           <div className="max-w-5xl mx-auto px-4 py-12 sm:py-16">
             <div className="flex items-center gap-3 mb-8">
               <Clock className="w-5 h-5 text-muted-foreground" />
@@ -308,7 +358,7 @@ export default function HomePage() {
 
       {/* Empty State */}
       {recentPlaylists.length === 0 && (
-        <section className="border-t border-border">
+        <section id="my-sets" className="border-t border-border scroll-mt-20">
           <div className="max-w-5xl mx-auto px-4 py-16 text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-secondary mb-6">
               <Music className="w-10 h-10 text-muted-foreground" />
@@ -319,6 +369,62 @@ export default function HomePage() {
             <p className="text-muted-foreground mb-6">
               Create your first setlist to get started
             </p>
+          </div>
+        </section>
+      )}
+
+      {/* Recently Shared Songs Section */}
+      {recentSharedSongs.length > 0 && (
+        <section className="border-t border-border">
+          <div className="max-w-5xl mx-auto px-4 py-12 sm:py-16">
+            <div className="flex items-center gap-3 mb-8">
+              <Link2 className="w-5 h-5 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground">Recently Shared Songs</h2>
+            </div>
+
+            <div className="space-y-2">
+              {recentSharedSongs.map((song) => (
+                <div
+                  key={song.id}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+                >
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
+                    {song.thumbnail_url ? (
+                      <img
+                        src={song.thumbnail_url}
+                        alt={song.title}
+                        className="w-full h-full object-cover"
+                        crossOrigin="anonymous"
+                      />
+                    ) : (
+                      <Music className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground truncate text-sm">{song.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{song.artist}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 gap-1.5 text-xs"
+                    onClick={() => copySongUrl(song.id)}
+                  >
+                    {copiedSongId === song.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy link
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -346,7 +452,10 @@ export default function HomePage() {
       {/* Share Song Dialog */}
       <ShareSongDialog
         open={showShareSongDialog}
-        onOpenChange={setShowShareSongDialog}
+        onOpenChange={(open) => {
+          setShowShareSongDialog(open)
+          if (!open) loadSharedSongs()
+        }}
       />
     </main>
   )

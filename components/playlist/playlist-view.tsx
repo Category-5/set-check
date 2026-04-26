@@ -10,9 +10,21 @@ import { ExternalLinkDialog } from "./external-link-dialog"
 import { EditSetlistDialog } from "./edit-setlist-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import type { Playlist, Song } from "@/lib/types"
-import { ArrowUp, Home, Pencil } from "lucide-react"
+import { ArrowUp, Home, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { RECENT_PLAYLISTS_KEY } from "@/lib/constants"
 import {
   DndContext,
   closestCenter,
@@ -39,9 +51,12 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isExternalLinkOpen, setIsExternalLinkOpen] = useState(false)
   const [isEditSetlistOpen, setIsEditSetlistOpen] = useState(false)
+  const [showDeletePlaylistConfirm, setShowDeletePlaylistConfirm] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<string | null>(null)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const supabase = createClient()
+  const router = useRouter()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -67,7 +82,6 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
 
   // Track recently viewed playlists in localStorage
   useEffect(() => {
-    const RECENT_PLAYLISTS_KEY = "set-check-recent-playlists"
     const MAX_RECENT = 12
 
     try {
@@ -158,6 +172,27 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
 
   const handlePlaylistUpdated = (updated: Partial<Playlist>) => {
     setPlaylist((prev) => ({ ...prev, ...updated }))
+  }
+
+  const handleDeletePlaylist = async () => {
+    setDeleteError(null)
+    try {
+      const { error } = await supabase.from("playlists").delete().eq("id", playlist.id)
+      if (error) throw error
+      try {
+        const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
+        if (stored) {
+          const recent = JSON.parse(stored) as { id: string }[]
+          localStorage.setItem(RECENT_PLAYLISTS_KEY, JSON.stringify(recent.filter((p) => p.id !== playlist.id)))
+        }
+      } catch {
+        // ignore localStorage errors
+      }
+      router.push("/")
+    } catch (error) {
+      console.error("Failed to delete playlist:", error)
+      setDeleteError("Something went wrong. Please try again.")
+    }
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -251,6 +286,15 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
       <div className="mx-auto max-w-4xl px-2 sm:px-4 py-6 sm:py-8">
         {/* Top Actions */}
         <div className="flex justify-end gap-2 mb-4">
+          {isCreator && (
+            <button
+              onClick={() => setShowDeletePlaylistConfirm(true)}
+              className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground"
+              aria-label="Delete playlist"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={() => setIsEditSetlistOpen(true)}
             className="flex items-center justify-center rounded-lg bg-secondary w-10 h-10 text-foreground transition-colors hover:bg-secondary/80"
@@ -363,6 +407,26 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           onPlaylistUpdated={handlePlaylistUpdated}
         />
       </div>
+
+      <AlertDialog open={showDeletePlaylistConfirm} onOpenChange={(open) => { setShowDeletePlaylistConfirm(open); if (!open) setDeleteError(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete playlist?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{playlist.name}&quot;? This will permanently remove the playlist and all its songs. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePlaylist} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Drag Overlay - shows the dragged item */}
       <DragOverlay>
