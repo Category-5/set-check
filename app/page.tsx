@@ -8,6 +8,7 @@ import { Logo } from "@/components/logo"
 import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 import { ImportSpotifyDialog } from "@/components/import-spotify-dialog"
+import { ShareSongDialog } from "@/components/share-song-dialog"
 
 interface RecentPlaylist {
   id: string
@@ -24,6 +25,7 @@ export default function HomePage() {
   const [isCreating, setIsCreating] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
+  const [showShareSongDialog, setShowShareSongDialog] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
@@ -193,6 +195,15 @@ export default function HomePage() {
                 </svg>
                 Import from Spotify
               </Button>
+              <Button
+                onClick={() => setShowShareSongDialog(true)}
+                variant="outline"
+                size="lg"
+                className="h-14 px-8 text-lg gap-3 rounded-full"
+              >
+                <Link2 className="w-5 h-5 text-primary" />
+                Share a Song
+              </Button>
             </div>
 
             {/* Testimonial */}
@@ -330,6 +341,12 @@ export default function HomePage() {
       <ImportSpotifyDialog
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
+      />
+
+      {/* Share Song Dialog */}
+      <ShareSongDialog
+        open={showShareSongDialog}
+        onOpenChange={setShowShareSongDialog}
       />
     </main>
   )
