@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
 import type { OdesliResponse } from "@/lib/types"
 import { ensureSpotifyLink } from "@/lib/spotify"
+import { isAppleMusicUrl, resolveAppleMusicUrl, ensureAppleMusicLink } from "@/lib/apple-music"
 
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
@@ -16,6 +17,49 @@ export async function POST(request: NextRequest) {
         { error: "URL is required" },
         { status: 400 }
       )
+    }
+
+    // Odesli returns 400 for Apple Music URLs — use iTunes API directly instead.
+    if (isAppleMusicUrl(url)) {
+      const appleData = await resolveAppleMusicUrl(url)
+      if (!appleData) {
+        return NextResponse.json(
+          { error: "Could not find song. Paste a direct track link from Apple Music (not an album link)." },
+          { status: 404 }
+        )
+      }
+
+      const platformLinks: Record<string, string> = {
+        appleMusic: appleData.appleMusicUrl,
+      }
+      await ensureSpotifyLink(platformLinks, appleData.title, appleData.artistName)
+
+      const songId = nanoid(10)
+      const supabase = await createClient()
+
+      const { error: insertError } = await supabase
+        .from("shared_songs")
+        .insert({
+          id: songId,
+          original_url: url,
+          title: appleData.title,
+          artist: appleData.artistName,
+          album: null,
+          thumbnail_url: appleData.thumbnailUrl,
+          platform_links: platformLinks,
+        })
+
+      if (insertError) {
+        console.error("Error inserting shared song:", insertError)
+        return NextResponse.json({ error: "Failed to create share link" }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        id: songId,
+        title: appleData.title,
+        artist: appleData.artistName,
+        thumbnail_url: appleData.thumbnailUrl,
+      })
     }
 
     // Fetch song info from Odesli
@@ -84,6 +128,7 @@ export async function POST(request: NextRequest) {
     const artist = entity.artistName || "Unknown Artist"
 
     await ensureSpotifyLink(platformLinks, title, artist)
+    await ensureAppleMusicLink(platformLinks, title, artist)
 
     const songId = nanoid(10)
     const supabase = await createClient()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { OdesliResponse } from "@/lib/types"
 import { ensureSpotifyLink } from "@/lib/spotify"
+import { isAppleMusicUrl, resolveAppleMusicUrl, ensureAppleMusicLink } from "@/lib/apple-music"
 
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
@@ -10,6 +11,36 @@ export async function GET(request: NextRequest) {
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 })
+  }
+
+  // Odesli returns 400 for Apple Music URLs — use iTunes API directly instead.
+  if (isAppleMusicUrl(url)) {
+    try {
+      const appleData = await resolveAppleMusicUrl(url)
+      if (!appleData) {
+        return NextResponse.json(
+          { error: "Could not find song. Paste a direct track link from Apple Music (not an album link)." },
+          { status: 404 }
+        )
+      }
+
+      const platformLinks: Record<string, string> = {
+        appleMusic: appleData.appleMusicUrl,
+      }
+      await ensureSpotifyLink(platformLinks, appleData.title, appleData.artistName)
+
+      const result: OdesliResponse = {
+        title: appleData.title,
+        artistName: appleData.artistName,
+        thumbnailUrl: appleData.thumbnailUrl,
+        platformLinks,
+        odesliUrl: null,
+      }
+      return NextResponse.json(result)
+    } catch (error) {
+      console.error("Apple Music lookup error:", error)
+      return NextResponse.json({ error: "Failed to search for song" }, { status: 500 })
+    }
   }
 
   try {
@@ -81,6 +112,7 @@ export async function GET(request: NextRequest) {
     const artistName = entity.artistName || "Unknown Artist"
 
     await ensureSpotifyLink(platformLinks, title, artistName)
+    await ensureAppleMusicLink(platformLinks, title, artistName)
 
     const result: OdesliResponse = {
       title,
