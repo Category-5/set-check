@@ -153,7 +153,7 @@ export default function HomePage() {
       />
 
       {/* Header with Logo */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4 bg-background/80 backdrop-blur-sm border-b border-border/50">
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Logo size={40} />
           <span className="text-lg font-semibold text-foreground">Set Check</span>
