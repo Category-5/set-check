@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
 import type { OdesliResponse } from "@/lib/types"
+import { ensureAppleMusicLink } from "@/lib/apple-music"
 
 const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
 
@@ -127,9 +128,14 @@ async function fetchOdesliData(spotifyUrl: string): Promise<OdesliResponse | nul
       }
     }
 
+    const title = entity.title || "Unknown Title"
+    const artistName = entity.artistName || "Unknown Artist"
+
+    await ensureAppleMusicLink(platformLinks, title, artistName)
+
     return {
-      title: entity.title || "Unknown Title",
-      artistName: entity.artistName || "Unknown Artist",
+      title,
+      artistName,
       album: entity.albumName,
       thumbnailUrl: entity.thumbnailUrl || null,
       platformLinks,
