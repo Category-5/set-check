@@ -107,7 +107,7 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Link2 className="w-5 h-5 text-primary" />
@@ -118,7 +118,7 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+            <div className="space-y-4 max-w-full overflow-hidden">
           {!result ? (
             <>
               <Input
@@ -154,8 +154,8 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
               </Button>
             </>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+        <div className="space-y-4 max-w-full overflow-hidden">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 overflow-hidden">
                 <div className="shrink-0 w-14 h-14 rounded bg-secondary flex items-center justify-center overflow-hidden">
                   {result.thumbnail_url ? (
                     <img
@@ -168,7 +168,7 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
                     <Music className="w-7 h-7 text-muted-foreground" />
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 overflow-hidden">
                   <p className="font-medium text-foreground truncate">{result.title}</p>
                   <p className="text-sm text-muted-foreground truncate">{result.artist}</p>
                 </div>
