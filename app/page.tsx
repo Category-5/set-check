@@ -431,11 +431,22 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 text-sm text-muted-foreground">
-          <span>Built by Category5</span>
+        <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2">
+            Built by
+            <a
+              href="https://category5.co"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+              aria-label="Category5"
+            >
+              <img src="/cat5-logo.svg" alt="Category5" className="h-4 w-auto" />
+            </a>
+          </span>
           <span className="hidden sm:inline">·</span>
-          <a 
-            href="mailto:hello@category5.co" 
+          <a
+            href="mailto:hello@category5.co"
             className="hover:text-foreground transition-colors"
           >
             Contact hello@category5.co
