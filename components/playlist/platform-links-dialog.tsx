@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -7,13 +8,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Music, ExternalLink } from "lucide-react"
+import { Music, ExternalLink, Share2, Check, Copy } from "lucide-react"
 import type { Song, PlatformLinks } from "@/lib/types"
 
 interface PlatformLinksDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   song: Song | null
+  playlistId?: string
 }
 
 const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
@@ -29,11 +31,54 @@ const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
   audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
 }
 
-export function PlatformLinksDialog({ open, onOpenChange, song }: PlatformLinksDialogProps) {
+export function PlatformLinksDialog({ open, onOpenChange, song, playlistId }: PlatformLinksDialogProps) {
+  const [copied, setCopied] = useState(false)
+  
   if (!song) return null
 
   const links = (song.platform_links || {}) as PlatformLinks
   const availablePlatforms = Object.entries(links).filter(([, url]) => url)
+
+  const shareUrl = playlistId && typeof window !== "undefined" 
+    ? `${window.location.origin}/p/${playlistId}?song=${song.id}`
+    : ""
+
+  const handleCopy = async () => {
+    if (!shareUrl) return
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea")
+      textArea.value = shareUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleShare = async () => {
+    if (!shareUrl) return
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${song.title} - ${song.artist}`,
+          text: `Check out "${song.title}" by ${song.artist}`,
+          url: shareUrl,
+        })
+      } catch {
+        // User cancelled or share failed, fall back to copy
+        handleCopy()
+      }
+    } else {
+      handleCopy()
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +139,40 @@ export function PlatformLinksDialog({ open, onOpenChange, song }: PlatformLinksD
             </p>
           )}
         </div>
+
+        {/* Share this song */}
+        {playlistId && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-2">Share this song</p>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleShare}
+                variant="outline"
+                className="flex-1 gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
+              <Button
+                onClick={handleCopy}
+                variant="secondary"
+                className="shrink-0 gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Link
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

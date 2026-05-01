@@ -105,6 +105,7 @@ export function SongList({
         open={isPlatformDialogOpen}
         onOpenChange={setIsPlatformDialogOpen}
         song={selectedSong}
+        playlistId={playlistId}
       />
 
       <NoteDialog
