@@ -244,7 +244,7 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
                 ) : (
                   <>
                     <Share2 className="w-4 h-4 mr-2" />
-                    Share Song
+                    Copy link
                   </>
                 )}
               </DropdownMenuItem>
@@ -316,7 +316,7 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
                 ) : (
                   <>
                     <Share2 className="w-4 h-4 mr-2" />
-                    Share Song
+                    Copy link
                   </>
                 )}
               </DropdownMenuItem>
