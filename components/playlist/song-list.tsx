@@ -89,6 +89,7 @@ export function SongList({
                 key={song.id}
                 song={song}
                 index={index}
+                playlistId={playlistId}
                 currentUser={currentUser}
                 isCreator={isCreator}
                 onRemove={() => handleRemoveSong(song.id)}
@@ -105,6 +106,7 @@ export function SongList({
         open={isPlatformDialogOpen}
         onOpenChange={setIsPlatformDialogOpen}
         song={selectedSong}
+        playlistId={playlistId}
       />
 
       <NoteDialog

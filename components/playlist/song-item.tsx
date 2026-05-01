@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { GripVertical, Trash2, MessageCircle, Music } from "lucide-react"
+import { GripVertical, Trash2, MessageCircle, Music, MoreHorizontal, Share2, Check } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +13,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { formatDistanceToNow } from "date-fns"
@@ -38,6 +45,7 @@ const KEYS = ["A", "Bb", "B", "C", "D", "Eb", "E", "F", "G"]
 interface SongItemProps {
   song: Song
   index: number
+  playlistId: string
   currentUser: string | null
   isCreator?: boolean
   onRemove: () => void
@@ -46,10 +54,50 @@ interface SongItemProps {
   onSongUpdated?: (song: Song) => void
 }
 
-export function SongItem({ song, index, currentUser, isCreator = false, onRemove, onClick, onNoteClick, onSongUpdated }: SongItemProps) {
+export function SongItem({ song, index, playlistId, currentUser, isCreator = false, onRemove, onClick, onNoteClick, onSongUpdated }: SongItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [currentKey, setCurrentKey] = useState(song.song_key || "C")
+  const [copied, setCopied] = useState(false)
   const supabase = createClient()
+
+  const shareUrl = typeof window !== "undefined" 
+    ? `${window.location.origin}/p/${playlistId}?song=${song.id}`
+    : ""
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${song.title} - ${song.artist}`,
+          text: `Check out "${song.title}" by ${song.artist}`,
+          url: shareUrl,
+        })
+      } catch {
+        // User cancelled or share failed, fall back to copy
+        handleCopy()
+      }
+    } else {
+      handleCopy()
+    }
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea")
+      textArea.value = shareUrl
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand("copy")
+      document.body.removeChild(textArea)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   const handleKeyClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -175,21 +223,45 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
             )}
           </Button>
 
-          {/* Remove - only shown to creator */}
-          {isCreator && (
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove song"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowDeleteConfirm(true)
-              }}
-              className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+          {/* More Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleShare}>
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2 text-emerald-500" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Copy link
+                  </>
+                )}
+              </DropdownMenuItem>
+              {isCreator && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove Song
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -223,21 +295,45 @@ export function SongItem({ song, index, currentUser, isCreator = false, onRemove
             )}
           </Button>
 
-          {/* Remove - only shown to creator */}
-          {isCreator && (
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove song"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowDeleteConfirm(true)
-              }}
-              className="shrink-0 text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
+          {/* More Menu - Mobile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleShare}>
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2 text-emerald-500" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Copy link
+                  </>
+                )}
+              </DropdownMenuItem>
+              {isCreator && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove Song
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

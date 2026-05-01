@@ -9,10 +9,11 @@ import { ShareDialog } from "./share-dialog"
 import { ExternalLinkDialog } from "./external-link-dialog"
 import { EditSetlistDialog } from "./edit-setlist-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
+import { PlatformLinksDialog } from "./platform-links-dialog"
 import type { Playlist, Song } from "@/lib/types"
 import { ArrowUp, Home, Pencil, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import {
   AlertDialog,
@@ -55,8 +56,11 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<string | null>(null)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [sharedSongDialogOpen, setSharedSongDialogOpen] = useState(false)
+  const [sharedSong, setSharedSong] = useState<Song | null>(null)
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -79,6 +83,22 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
       setCurrentUser(storedName)
     }
   }, [])
+
+  // Handle shared song link - auto-open the song dialog when ?song=id is present
+  useEffect(() => {
+    const songId = searchParams.get("song")
+    if (songId && songs.length > 0) {
+      const song = songs.find((s) => s.id === songId)
+      if (song) {
+        setSharedSong(song)
+        setSharedSongDialogOpen(true)
+        // Clean up the URL without causing a navigation
+        const url = new URL(window.location.href)
+        url.searchParams.delete("song")
+        window.history.replaceState({}, "", url.toString())
+      }
+    }
+  }, [searchParams, songs])
 
   // Track recently viewed playlists in localStorage
   useEffect(() => {
@@ -405,6 +425,14 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           onOpenChange={setIsEditSetlistOpen}
           playlist={playlist}
           onPlaylistUpdated={handlePlaylistUpdated}
+        />
+
+        {/* Dialog for shared song links */}
+        <PlatformLinksDialog
+          open={sharedSongDialogOpen}
+          onOpenChange={setSharedSongDialogOpen}
+          song={sharedSong}
+          playlistId={playlist.id}
         />
       </div>
 
