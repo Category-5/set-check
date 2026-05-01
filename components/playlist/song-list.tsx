@@ -89,6 +89,7 @@ export function SongList({
                 key={song.id}
                 song={song}
                 index={index}
+                playlistId={playlistId}
                 currentUser={currentUser}
                 isCreator={isCreator}
                 onRemove={() => handleRemoveSong(song.id)}
