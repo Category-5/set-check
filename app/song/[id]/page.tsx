@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
-import { Music, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Music } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
 import type { Metadata } from "next"
+import { PlatformButton } from "./platform-button"
 
 interface PlatformLinks {
   spotify?: string
@@ -135,20 +135,13 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
               availablePlatforms.map(([platform, url]) => {
                 const info = PLATFORM_INFO[platform] || { name: platform, color: "bg-muted" }
                 return (
-                  <Button
+                  <PlatformButton
                     key={platform}
-                    variant="secondary"
-                    className="w-full justify-between h-12"
-                    asChild
-                  >
-                    <a href={url as string} target="_blank" rel="noopener noreferrer">
-                      <span className="flex items-center gap-3">
-                        <span className={`w-2 h-2 rounded-full ${info.color}`} />
-                        {info.name}
-                      </span>
-                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                    </a>
-                  </Button>
+                    platform={platform}
+                    url={url as string}
+                    name={info.name}
+                    color={info.color}
+                  />
                 )
               })
             ) : (
