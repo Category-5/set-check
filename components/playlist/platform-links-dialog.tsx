@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Music, ExternalLink, Share2, Check, Copy } from "lucide-react"
 import type { Song, PlatformLinks } from "@/lib/types"
+import { openWithAppFallback } from "@/lib/utils"
 
 interface PlatformLinksDialogProps {
   open: boolean
@@ -121,15 +122,13 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId }: Pl
                   key={platform}
                   variant="secondary"
                   className="justify-between h-12"
-                  asChild
+                  onClick={() => openWithAppFallback(url as string)}
                 >
-                  <a href={url as string} target="_blank" rel="noopener noreferrer">
-                    <span className="flex items-center gap-3">
-                      <span className={`w-2 h-2 rounded-full ${info.color}`} />
-                      {info.name}
-                    </span>
-                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                  </a>
+                  <span className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full ${info.color}`} />
+                    {info.name}
+                  </span>
+                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
                 </Button>
               )
             })

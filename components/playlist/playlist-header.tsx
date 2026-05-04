@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Share2, Music, ImagePlus, Link2 } from "lucide-react"
 import type { Playlist } from "@/lib/types"
+import { openWithAppFallback } from "@/lib/utils"
 
 interface PlaylistHeaderProps {
   playlist: Playlist
@@ -135,7 +136,7 @@ export function PlaylistHeader({
           </span>
           {playlist.external_link && (
             <Button 
-              onClick={() => window.open(playlist.external_link!, '_blank')} 
+              onClick={() => openWithAppFallback(playlist.external_link!)} 
               size="icon" 
               variant="outline"
               className="rounded-full h-10 w-10"
