@@ -26,6 +26,10 @@ interface RecentSharedSong {
   sharedAt: number
 }
 
+interface Stats {
+  setlistsCreated: number
+  songsShared: number
+}
 
 export default function HomePage() {
   const router = useRouter()
@@ -36,6 +40,7 @@ export default function HomePage() {
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [showShareSongDialog, setShowShareSongDialog] = useState(false)
   const [copiedSongId, setCopiedSongId] = useState<string | null>(null)
+  const [stats, setStats] = useState<Stats>({ setlistsCreated: 0, songsShared: 0 })
 
   const loadSharedSongs = useCallback(() => {
     const raw = localStorage.getItem(SHARED_SONGS_KEY)
@@ -45,6 +50,18 @@ export default function HomePage() {
     } catch {
       // ignore
     }
+  }, [])
+
+  const loadStats = useCallback(async () => {
+    const supabase = createClient()
+    const [playlistsResult, sharedSongsResult] = await Promise.all([
+      supabase.from("playlists").select("*", { count: "exact", head: true }),
+      supabase.from("shared_songs").select("*", { count: "exact", head: true }),
+    ])
+    setStats({
+      setlistsCreated: playlistsResult.count ?? 0,
+      songsShared: sharedSongsResult.count ?? 0,
+    })
   }, [])
 
   useEffect(() => {
@@ -59,8 +76,9 @@ export default function HomePage() {
       }
     }
     loadSharedSongs()
+    loadStats()
     setIsLoaded(true)
-  }, [loadSharedSongs])
+  }, [loadSharedSongs, loadStats])
 
   const copySongUrl = useCallback(async (id: string) => {
     const url = `${window.location.origin}/song/${id}`
@@ -255,6 +273,25 @@ export default function HomePage() {
                 Share a Song
               </Button>
             </div>
+
+            {/* Stats Counter */}
+            {(stats.setlistsCreated > 0 || stats.songsShared > 0) && (
+              <div className="flex items-center justify-center gap-8 mt-10">
+                <div className="text-center">
+                  <p className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums">
+                    {stats.setlistsCreated.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Setlists Created</p>
+                </div>
+                <div className="w-px h-10 bg-border" />
+                <div className="text-center">
+                  <p className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums">
+                    {stats.songsShared.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Songs Shared</p>
+                </div>
+              </div>
+            )}
 
             {/* Testimonial */}
             <blockquote className="mt-12 max-w-xl mx-auto rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-6 relative">
