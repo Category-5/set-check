@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { createClient } from "@/lib/supabase/client"
 import type { Playlist } from "@/lib/types"
 
@@ -88,14 +88,11 @@ export function EditSetlistDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+            <Label>Description</Label>
+            <RichTextEditor
+              content={description}
+              onChange={setDescription}
               placeholder="Add a description..."
-              rows={3}
-              className="resize-none"
             />
           </div>
 

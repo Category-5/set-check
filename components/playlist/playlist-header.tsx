@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Share2, Music, ImagePlus, Link2 } from "lucide-react"
+import { RichTextDisplay } from "@/components/ui/rich-text-display"
+import { Share2, Music, ImagePlus, FileMusic } from "lucide-react"
 import type { Playlist } from "@/lib/types"
 import { openWithAppFallback } from "@/lib/utils"
 
@@ -125,9 +126,11 @@ export function PlaylistHeader({
         </h1>
 
         {/* Description */}
-        <p className="text-muted-foreground text-sm mb-4">
-          {playlist.description || "No description"}
-        </p>
+        {playlist.description ? (
+          <RichTextDisplay content={playlist.description} className="mb-4" />
+        ) : (
+          <p className="text-muted-foreground text-sm mb-4">No description</p>
+        )}
 
         {/* Stats & Actions - Centered on mobile */}
         <div className="flex items-center justify-center sm:justify-start gap-4">
@@ -141,7 +144,7 @@ export function PlaylistHeader({
               variant="outline"
               className="rounded-full h-10 w-10"
             >
-              <Link2 className="w-5 h-5" />
+              <FileMusic className="w-5 h-5" />
             </Button>
           )}
           <Button onClick={onShareClick} size="icon" className="rounded-full h-10 w-10">

@@ -19,6 +19,7 @@ export interface Song {
   thumbnail_url: string | null
   position: number
   note: string | null
+  external_link: string | null
   added_at: string
   added_by: string | null
   is_promoted: boolean
@@ -54,6 +55,20 @@ export interface OdesliResponse {
   platformLinks: Record<string, string>
   odesliUrl?: string | null
 }
+
+export interface SectionNote {
+  id: string
+  playlist_id: string
+  title: string
+  content: string
+  icon: string
+  color: string
+  position: number
+  created_at: string
+  type: 'section_note'
+}
+
+export type SetItem = (Song & { type: 'song' }) | SectionNote
 
 // Raw Odesli API response (for reference)
 export interface RawOdesliResponse {

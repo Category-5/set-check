@@ -50,8 +50,8 @@ vi.mock("@/components/playlist/vote-buttons", () => ({
 vi.mock("@/components/playlist/platform-links-dialog", () => ({
   PlatformLinksDialog: () => null,
 }))
-vi.mock("@/components/playlist/note-dialog", () => ({
-  NoteDialog: () => null,
+vi.mock("@/components/playlist/song-edit-dialog", () => ({
+  SongEditDialog: () => null,
 }))
 
 import { SongItem } from "@/components/playlist/song-item"
@@ -67,6 +67,7 @@ const baseSong: Song = {
   thumbnail_url: null,
   position: 0,
   note: null,
+  external_link: null,
   added_at: "2024-01-01T00:00:00Z",
   added_by: "alice",
   is_promoted: true,
@@ -84,11 +85,12 @@ describe("SongItem — Set song deletion", () => {
       <SongItem
         song={baseSong}
         index={0}
+        playlistId="playlist-1"
         currentUser="alice"
         isCreator={true}
         onRemove={vi.fn()}
         onClick={vi.fn()}
-        onNoteClick={vi.fn()}
+        onEditClick={vi.fn()}
       />
     )
     expect(screen.getAllByRole("button", { name: "Remove song" }).length).toBeGreaterThan(0)
@@ -99,11 +101,12 @@ describe("SongItem — Set song deletion", () => {
       <SongItem
         song={baseSong}
         index={0}
+        playlistId="playlist-1"
         currentUser="bob"
         isCreator={false}
         onRemove={vi.fn()}
         onClick={vi.fn()}
-        onNoteClick={vi.fn()}
+        onEditClick={vi.fn()}
       />
     )
     expect(screen.queryAllByRole("button", { name: "Remove song" })).toHaveLength(0)
