@@ -10,8 +10,9 @@ import { ExternalLinkDialog } from "./external-link-dialog"
 import { EditSetlistDialog } from "./edit-setlist-dialog"
 import { NamePromptDialog } from "./name-prompt-dialog"
 import { PlatformLinksDialog } from "./platform-links-dialog"
-import type { Playlist, Song } from "@/lib/types"
-import { ArrowUp, Home, Pencil, Trash2 } from "lucide-react"
+import { SectionNotePanel } from "./section-note-panel"
+import type { Playlist, Song, SectionNote, SetItem } from "@/lib/types"
+import { ArrowUp, Home, Pencil, Trash2, Plus } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -43,11 +44,13 @@ import { arrayMove } from "@dnd-kit/sortable"
 interface PlaylistViewProps {
   playlist: Playlist
   initialSongs: Song[]
+  initialSectionNotes?: SectionNote[]
 }
 
-export function PlaylistView({ playlist: initialPlaylist, initialSongs }: PlaylistViewProps) {
+export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialSectionNotes = [] }: PlaylistViewProps) {
   const [playlist, setPlaylist] = useState(initialPlaylist)
   const [songs, setSongs] = useState(initialSongs)
+  const [sectionNotes, setSectionNotes] = useState<SectionNote[]>(initialSectionNotes)
   const [isAddSongOpen, setIsAddSongOpen] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isExternalLinkOpen, setIsExternalLinkOpen] = useState(false)
@@ -58,6 +61,8 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [sharedSongDialogOpen, setSharedSongDialogOpen] = useState(false)
   const [sharedSong, setSharedSong] = useState<Song | null>(null)
+  const [selectedNote, setSelectedNote] = useState<SectionNote | null>(null)
+  const [isNotePanelOpen, setIsNotePanelOpen] = useState(false)
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -138,10 +143,17 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
   }, [currentUser, playlist.created_by])
 
   // Separate promoted songs (the Set) from ideas
-  const promotedSongs = useMemo(() => 
+  const promotedSongs = useMemo(() =>
     songs.filter((s) => s.is_promoted).sort((a, b) => a.position - b.position),
     [songs]
   )
+
+  // Merge promoted songs and section notes into a single ordered set list
+  const setItems: SetItem[] = useMemo(() => {
+    const songItems: SetItem[] = promotedSongs.map(s => ({ ...s, type: 'song' as const }))
+    const noteItems: SetItem[] = sectionNotes.map(n => ({ ...n, type: 'section_note' as const }))
+    return [...songItems, ...noteItems].sort((a, b) => a.position - b.position)
+  }, [promotedSongs, sectionNotes])
 
   // Group ideas by person
   const ideasByPerson = useMemo(() => {
@@ -164,11 +176,16 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
     return grouped
   }, [songs])
 
-  // Get the currently dragged song
-  const activeSong = useMemo(() => 
+  // Get the currently dragged item (song or section note)
+  const activeSong = useMemo(() =>
     activeDragId ? songs.find(s => s.id === activeDragId) : null,
     [activeDragId, songs]
   )
+
+  const activeDragItem: SetItem | null = useMemo(() => {
+    if (!activeDragId) return null
+    return setItems.find(item => item.id === activeDragId) || null
+  }, [activeDragId, setItems])
 
   const handleNameSet = (name: string) => {
     setCurrentUser(name)
@@ -192,6 +209,64 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
 
   const handlePlaylistUpdated = (updated: Partial<Playlist>) => {
     setPlaylist((prev) => ({ ...prev, ...updated }))
+  }
+
+  const handleAddSectionNote = () => {
+    const tempNote: SectionNote = {
+      id: `temp_${Date.now()}`,
+      playlist_id: playlist.id,
+      title: "",
+      content: "",
+      icon: "hand-heart",
+      color: "slate",
+      position: setItems.length,
+      created_at: new Date().toISOString(),
+      type: 'section_note',
+    }
+    setSelectedNote(tempNote)
+    setIsNotePanelOpen(true)
+  }
+
+  const handleSectionNoteRemoved = async (noteId: string) => {
+    const res = await fetch(`/api/section-notes?id=${noteId}`, { method: "DELETE" })
+    if (res.ok) {
+      setSectionNotes(prev => prev.filter(n => n.id !== noteId))
+    }
+  }
+
+  const handleSectionNoteSave = async (id: string, updates: { title: string; content: string; icon: string; color: string }) => {
+    const isNew = id.startsWith("temp_")
+
+    if (isNew) {
+      const res = await fetch("/api/section-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playlist_id: playlist.id,
+          position: setItems.length,
+          ...updates,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSectionNotes(prev => [...prev, { ...data, type: 'section_note' }])
+      }
+    } else {
+      const res = await fetch("/api/section-notes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...updates }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setSectionNotes(prev => prev.map(n => n.id === id ? { ...data, type: 'section_note' } : n))
+      }
+    }
+  }
+
+  const handleSectionNoteClick = (note: SectionNote) => {
+    setSelectedNote(note)
+    setIsNotePanelOpen(true)
   }
 
   const handleDeletePlaylist = async () => {
@@ -219,6 +294,38 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
     setActiveDragId(event.active.id as string)
   }
 
+  const reorderSetItems = useCallback(async (activeId: string, overId: string) => {
+    const oldIndex = setItems.findIndex(item => item.id === activeId)
+    const newIndex = setItems.findIndex(item => item.id === overId)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reorderedItems = arrayMove(setItems, oldIndex, newIndex)
+
+    setSongs(prev => {
+      const ideas = prev.filter(s => !s.is_promoted)
+      const updatedPromoted = prev.filter(s => s.is_promoted).map(s => {
+        const idx = reorderedItems.findIndex(item => item.id === s.id)
+        return idx !== -1 ? { ...s, position: idx } : s
+      })
+      return [...updatedPromoted, ...ideas]
+    })
+
+    setSectionNotes(prev => prev.map(n => {
+      const idx = reorderedItems.findIndex(item => item.id === n.id)
+      return idx !== -1 ? { ...n, position: idx } : n
+    }))
+
+    for (let i = 0; i < reorderedItems.length; i++) {
+      const item = reorderedItems[i]
+      if (item.type === 'song') {
+        await supabase.from("songs").update({ position: i }).eq("id", item.id)
+      } else {
+        await supabase.from("section_notes").update({ position: i }).eq("id", item.id)
+      }
+    }
+  }, [setItems, supabase])
+
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveDragId(null)
@@ -230,71 +337,48 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
 
     const activeSong = songs.find(s => s.id === activeId)
     const overSong = songs.find(s => s.id === overId)
+    const isActiveSetItem = setItems.some(item => item.id === activeId)
+    const isOverSetItem = setItems.some(item => item.id === overId) || overId === "set-droppable"
+
+    // Section note being reordered within the set
+    if (!activeSong && isActiveSetItem && isCreator) {
+      await reorderSetItems(activeId, overId)
+      return
+    }
 
     if (!activeSong) return
 
     // Check if dropping onto a droppable zone (set or ideas)
-    const isOverSet = overId === "set-droppable" || (overSong && overSong.is_promoted)
+    const isOverSet = overId === "set-droppable" || (overSong && overSong.is_promoted) || isOverSetItem
     const isOverIdeas = overId === "ideas-droppable" || (overSong && !overSong.is_promoted)
 
     // Only creator can move songs between sections
     if (isCreator && activeSong.is_promoted !== isOverSet) {
-      // Moving between sections
       if (isOverSet && !activeSong.is_promoted) {
-        // Moving from ideas to set
-        const newPosition = promotedSongs.length
+        const newPosition = setItems.length
         const updatedSong = { ...activeSong, is_promoted: true, position: newPosition }
-        
+
         setSongs(prev => prev.map(s => s.id === activeId ? updatedSong : s))
-        
+
         await supabase
           .from("songs")
           .update({ is_promoted: true, position: newPosition })
           .eq("id", activeId)
       } else if (isOverIdeas && activeSong.is_promoted) {
-        // Moving from set to ideas
         const newPosition = songs.filter(s => !s.is_promoted).length
         const updatedSong = { ...activeSong, is_promoted: false, position: newPosition }
-        
+
         setSongs(prev => prev.map(s => s.id === activeId ? updatedSong : s))
-        
+
         await supabase
           .from("songs")
           .update({ is_promoted: false, position: newPosition })
           .eq("id", activeId)
       }
-    } else if (overSong && activeSong.is_promoted === overSong.is_promoted) {
-      // Reordering within the same section (only for set songs and only for creator)
-      if (activeSong.is_promoted && isCreator) {
-        const oldIndex = promotedSongs.findIndex(s => s.id === activeId)
-        const newIndex = promotedSongs.findIndex(s => s.id === overId)
-        
-        if (oldIndex !== -1 && newIndex !== -1) {
-          const reorderedSongs = arrayMove(promotedSongs, oldIndex, newIndex)
-          
-          // Update local state immediately
-          setSongs(prev => {
-            const ideas = prev.filter(s => !s.is_promoted)
-            return [...reorderedSongs.map((s, i) => ({ ...s, position: i })), ...ideas]
-          })
-          
-          // Update database
-          const updates = reorderedSongs.map((song, index) => ({
-            id: song.id,
-            position: index,
-          }))
-
-          // Use a single transaction-like approach
-          for (const update of updates) {
-            await supabase
-              .from("songs")
-              .update({ position: update.position })
-              .eq("id", update.id)
-          }
-        }
-      }
+    } else if (activeSong.is_promoted && isCreator) {
+      await reorderSetItems(activeId, overId)
     }
-  }, [songs, promotedSongs, isCreator, supabase])
+  }, [songs, setItems, isCreator, supabase, reorderSetItems])
 
   return (
     <DndContext
@@ -350,18 +434,30 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           <div className="rounded-xl border-2 border-orange-500 bg-card/50 p-1.5 sm:p-3">
             <SongList
               songs={promotedSongs}
+              setItems={setItems}
               playlistId={playlist.id}
               currentUser={currentUser}
               isCreator={isCreator}
               onSongRemoved={handleSongRemoved}
               onSongUpdated={handleSongUpdated}
+              onSectionNoteClick={handleSectionNoteClick}
+              onSectionNoteRemoved={handleSectionNoteRemoved}
               showAddButton={false}
               droppableId="set-droppable"
             />
-            {promotedSongs.length === 0 && (
+            {setItems.length === 0 && (
               <p className="py-6 sm:py-8 text-center text-sm sm:text-base text-muted-foreground">
                 No songs in the set yet. {isCreator ? "Drag songs here or promote from Ideas!" : "Promote songs from Ideas below!"}
               </p>
+            )}
+            {isCreator && (
+              <button
+                onClick={handleAddSectionNote}
+                className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card/50 p-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add a call to worship or scripture or prayer
+              </button>
             )}
           </div>
         </div>
@@ -427,6 +523,14 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
           onPlaylistUpdated={handlePlaylistUpdated}
         />
 
+        <SectionNotePanel
+          open={isNotePanelOpen}
+          onOpenChange={setIsNotePanelOpen}
+          note={selectedNote}
+          isCreator={isCreator}
+          onSave={handleSectionNoteSave}
+        />
+
         {/* Dialog for shared song links */}
         <PlatformLinksDialog
           open={sharedSongDialogOpen}
@@ -458,7 +562,15 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs }: Playli
 
       {/* Drag Overlay - shows the dragged item */}
       <DragOverlay>
-        {activeSong && (
+        {activeDragItem && (
+          <div className="rounded-lg bg-card shadow-lg p-3 border border-primary">
+            <p className="font-medium text-foreground truncate">{activeDragItem.title}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {activeDragItem.type === 'song' ? activeDragItem.artist : activeDragItem.content.slice(0, 40)}
+            </p>
+          </div>
+        )}
+        {activeSong && !activeDragItem && (
           <div className="rounded-lg bg-card shadow-lg p-3 border border-primary">
             <p className="font-medium text-foreground truncate">{activeSong.title}</p>
             <p className="text-sm text-muted-foreground truncate">{activeSong.artist}</p>

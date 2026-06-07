@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowUp, Music, MoreHorizontal, Trash2, MessageCircle, ExternalLink, GripVertical } from "lucide-react"
+import { ArrowUp, Music, MoreHorizontal, Trash2, FileMusic, GripVertical, Pencil } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { PlatformLinksDialog } from "./platform-links-dialog"
-import { NoteDialog } from "./note-dialog"
+import { SongEditDialog } from "./song-edit-dialog"
 import { VoteButtons } from "./vote-buttons"
 import { createClient } from "@/lib/supabase/client"
 import type { Song } from "@/lib/types"
@@ -48,7 +48,7 @@ export function IdeaSongItem({
   onSongPromoted,
 }: IdeaSongItemProps) {
   const [isLinksOpen, setIsLinksOpen] = useState(false)
-  const [isNoteOpen, setIsNoteOpen] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const [isPromoting, setIsPromoting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const supabase = createClient()
@@ -107,17 +107,17 @@ export function IdeaSongItem({
     }
   }
 
-  const handleNoteUpdate = async (note: string) => {
+  const handleEditSave = async (data: { note: string; externalLink: string }) => {
     try {
       const { error } = await supabase
         .from("songs")
-        .update({ note })
+        .update({ note: data.note || null, external_link: data.externalLink || null })
         .eq("id", song.id)
 
       if (error) throw error
-      onSongUpdated({ ...song, note })
+      onSongUpdated({ ...song, note: data.note || null, external_link: data.externalLink || null })
     } catch (error) {
-      console.error("Failed to update note:", error)
+      console.error("Failed to update song:", error)
     }
   }
 
@@ -186,18 +186,20 @@ export function IdeaSongItem({
             {/* Vote Buttons */}
             <VoteButtons songId={song.id} currentUser={currentUser} />
 
-            {/* Note indicator */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsNoteOpen(true)}
-              className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
-            >
-              <MessageCircle className="h-4 w-4" />
-              {song.note && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-              )}
-            </Button>
+            {/* External Link */}
+            {song.external_link && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-primary"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.open(song.external_link!, "_blank", "noopener,noreferrer")
+                }}
+              >
+                <FileMusic className="h-4 w-4" />
+              </Button>
+            )}
 
             {/* Promote button - only shown to creator */}
             {isCreator && (
@@ -238,13 +240,13 @@ export function IdeaSongItem({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open links
+                <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  {song.note ? "Edit note" : "Add note"}
+                <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
+                  <FileMusic className="mr-2 h-4 w-4" />
+                  Open links
                 </DropdownMenuItem>
                 {canRemove && (
                   <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
@@ -262,18 +264,20 @@ export function IdeaSongItem({
           {/* Vote Buttons */}
           <VoteButtons songId={song.id} currentUser={currentUser} />
 
-          {/* Note indicator */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsNoteOpen(true)}
-            className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground"}`}
-          >
-            <MessageCircle className="h-4 w-4" />
-            {song.note && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-            )}
-          </Button>
+          {/* External Link */}
+          {song.external_link && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 text-primary"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(song.external_link!, "_blank", "noopener,noreferrer")
+              }}
+            >
+              <FileMusic className="h-4 w-4" />
+            </Button>
+          )}
 
           {/* Promote button - only shown to creator */}
           {isCreator && (
@@ -313,13 +317,13 @@ export function IdeaSongItem({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Open links
+              <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsNoteOpen(true)}>
-                <MessageCircle className="mr-2 h-4 w-4" />
-                {song.note ? "Edit note" : "Add note"}
+              <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
+                <FileMusic className="mr-2 h-4 w-4" />
+                Open links
               </DropdownMenuItem>
               {canRemove && (
                 <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
@@ -356,11 +360,12 @@ export function IdeaSongItem({
         song={song}
       />
 
-      <NoteDialog
-        open={isNoteOpen}
-        onOpenChange={setIsNoteOpen}
+      <SongEditDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
         note={song.note || ""}
-        onSave={handleNoteUpdate}
+        externalLink={song.external_link || ""}
+        onSave={handleEditSave}
       />
     </>
   )

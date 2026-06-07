@@ -60,10 +60,18 @@ export default async function PlaylistPage({ params }: PageProps) {
     .select("*")
     .eq("playlist_id", id)
     .order("position", { ascending: true })
-  
+
+  const { data: sectionNotes } = await supabase
+    .from("section_notes")
+    .select("*")
+    .eq("playlist_id", id)
+    .order("position", { ascending: true })
+
+  const notesWithType = (sectionNotes || []).map(n => ({ ...n, color: n.color || 'slate', type: 'section_note' as const }))
+
   return (
     <main className="min-h-screen bg-background">
-      <PlaylistView playlist={playlist} initialSongs={songs || []} />
+      <PlaylistView playlist={playlist} initialSongs={songs || []} initialSectionNotes={notesWithType} />
     </main>
   )
 }

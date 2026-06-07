@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { GripVertical, Trash2, MessageCircle, Music, MoreHorizontal, Share2, Check } from "lucide-react"
+import { GripVertical, Trash2, Music, MoreHorizontal, Share2, Check, FileMusic, Pencil } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,11 +50,11 @@ interface SongItemProps {
   isCreator?: boolean
   onRemove: () => void
   onClick: () => void
-  onNoteClick: () => void
+  onEditClick: () => void
   onSongUpdated?: (song: Song) => void
 }
 
-export function SongItem({ song, index, playlistId, currentUser, isCreator = false, onRemove, onClick, onNoteClick, onSongUpdated }: SongItemProps) {
+export function SongItem({ song, index, playlistId, currentUser, isCreator = false, onRemove, onClick, onEditClick, onSongUpdated }: SongItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [currentKey, setCurrentKey] = useState(song.song_key || "C")
   const [copied, setCopied] = useState(false)
@@ -163,7 +163,7 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
         {/* Thumbnail */}
         <button
           onClick={onClick}
-          className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all"
+          className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all relative"
         >
           {song.thumbnail_url ? (
             <img
@@ -174,6 +174,9 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
             />
           ) : (
             <Music className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
+          )}
+          {song.note && (
+            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary ring-1 ring-background" />
           )}
         </button>
 
@@ -207,21 +210,20 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
           {/* Vote Buttons */}
           <VoteButtons songId={song.id} currentUser={currentUser} />
 
-          {/* Note Indicator */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation()
-              onNoteClick()
-            }}
-            className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground opacity-0 group-hover:opacity-100"}`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            {song.note && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-            )}
-          </Button>
+          {/* External Link */}
+          {song.external_link && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 text-primary"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(song.external_link!, "_blank", "noopener,noreferrer")
+              }}
+            >
+              <FileMusic className="w-4 h-4" />
+            </Button>
+          )}
 
           {/* More Menu */}
           <DropdownMenu>
@@ -235,6 +237,10 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEditClick}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleShare}>
                 {copied ? (
                   <>
@@ -279,21 +285,20 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
           {/* Vote Buttons */}
           <VoteButtons songId={song.id} currentUser={currentUser} />
 
-          {/* Note Indicator */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation()
-              onNoteClick()
-            }}
-            className={`shrink-0 relative ${song.note ? "text-primary" : "text-muted-foreground"}`}
-          >
-            <MessageCircle className="w-4 h-4" />
-            {song.note && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-            )}
-          </Button>
+          {/* External Link */}
+          {song.external_link && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 text-primary"
+              onClick={(e) => {
+                e.stopPropagation()
+                window.open(song.external_link!, "_blank", "noopener,noreferrer")
+              }}
+            >
+              <FileMusic className="w-4 h-4" />
+            </Button>
+          )}
 
           {/* More Menu - Mobile */}
           <DropdownMenu>
@@ -307,6 +312,10 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onEditClick}>
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleShare}>
                 {copied ? (
                   <>
