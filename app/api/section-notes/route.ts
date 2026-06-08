@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("[section-notes] POST error:", JSON.stringify(error))
+    return NextResponse.json({ error: error.message, code: error.code, details: error.details }, { status: 500 })
   }
 
   return NextResponse.json(data)

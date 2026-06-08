@@ -83,7 +83,7 @@ export function SectionNoteItem({ note, isCreator, onRemove, onClick }: SectionN
   const noteColor = note.color && note.color in COLOR_STYLES ? note.color : "slate"
   const colorStyle = COLOR_STYLES[noteColor]
 
-  const plainContent = note.content.replace(/[#*_~`>\-\[\]()]/g, "").trim()
+  const plainContent = note.content.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim()
   const truncatedContent = plainContent.length > 60
     ? plainContent.slice(0, 60) + "..."
     : plainContent
