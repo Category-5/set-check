@@ -86,6 +86,8 @@ export function SongList({
   const itemsToRender = setItems || songs.map(s => ({ ...s, type: 'song' as const }))
   const sortableIds = itemsToRender.map(item => item.id)
 
+  let songIndex = 0
+
   return (
     <>
       <div
@@ -94,7 +96,7 @@ export function SongList({
       >
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5 sm:space-y-2">
-            {itemsToRender.map((item, index) => {
+            {itemsToRender.map((item) => {
               if (item.type === 'section_note') {
                 return (
                   <SectionNoteItem
@@ -106,11 +108,12 @@ export function SongList({
                   />
                 )
               }
+              const currentSongIndex = songIndex++
               return (
                 <SongItem
                   key={item.id}
                   song={item}
-                  index={index}
+                  index={currentSongIndex}
                   playlistId={playlistId}
                   currentUser={currentUser}
                   isCreator={isCreator}

@@ -480,7 +480,7 @@ export default function HomePage() {
               className="hover:opacity-80 transition-opacity"
               aria-label="Category5"
             >
-              <img src="/cat5-logo.svg" alt="Category5" className="h-4 w-auto" />
+              <img src="/cat5-logo.svg" alt="Category5" className="h-4 w-auto dark:invert" />
             </a>
           </span>
           <span className="hidden sm:inline">·</span>
