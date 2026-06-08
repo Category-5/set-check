@@ -142,6 +142,8 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
     return currentUser === playlist.created_by
   }, [currentUser, playlist.created_by])
 
+  const canEdit = isCreator || playlist.public_edit
+
   // Separate promoted songs (the Set) from ideas
   const promotedSongs = useMemo(() =>
     songs.filter((s) => s.is_promoted).sort((a, b) => a.position - b.position),
@@ -341,7 +343,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
     const isOverSetItem = setItems.some(item => item.id === overId) || overId === "set-droppable"
 
     // Section note being reordered within the set
-    if (!activeSong && isActiveSetItem && isCreator) {
+    if (!activeSong && isActiveSetItem && canEdit) {
       await reorderSetItems(activeId, overId)
       return
     }
@@ -352,8 +354,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
     const isOverSet = overId === "set-droppable" || (overSong && overSong.is_promoted) || isOverSetItem
     const isOverIdeas = overId === "ideas-droppable" || (overSong && !overSong.is_promoted)
 
-    // Only creator can move songs between sections
-    if (isCreator && activeSong.is_promoted !== isOverSet) {
+    if (canEdit && activeSong.is_promoted !== isOverSet) {
       if (isOverSet && !activeSong.is_promoted) {
         const newPosition = setItems.length
         const updatedSong = { ...activeSong, is_promoted: true, position: newPosition }
@@ -375,10 +376,10 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
           .update({ is_promoted: false, position: newPosition })
           .eq("id", activeId)
       }
-    } else if (activeSong.is_promoted && isCreator) {
+    } else if (activeSong.is_promoted && canEdit) {
       await reorderSetItems(activeId, overId)
     }
-  }, [songs, setItems, isCreator, supabase, reorderSetItems])
+  }, [songs, setItems, canEdit, supabase, reorderSetItems])
 
   return (
     <DndContext
@@ -437,7 +438,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
               setItems={setItems}
               playlistId={playlist.id}
               currentUser={currentUser}
-              isCreator={isCreator}
+              isCreator={canEdit}
               onSongRemoved={handleSongRemoved}
               onSongUpdated={handleSongUpdated}
               onSectionNoteClick={handleSectionNoteClick}
@@ -447,10 +448,10 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
             />
             {setItems.length === 0 && (
               <p className="py-6 sm:py-8 text-center text-sm sm:text-base text-muted-foreground">
-                No songs in the set yet. {isCreator ? "Drag songs here or promote from Ideas!" : "Promote songs from Ideas below!"}
+                No songs in the set yet. {canEdit ? "Drag songs here or promote from Ideas!" : "Promote songs from Ideas below!"}
               </p>
             )}
-            {isCreator && (
+            {canEdit && (
               <button
                 onClick={handleAddSectionNote}
                 className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-card/50 p-2 text-xs sm:text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
@@ -485,7 +486,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
             ideasByPerson={ideasByPerson}
             playlistId={playlist.id}
             currentUser={currentUser}
-            isCreator={isCreator}
+            isCreator={canEdit}
             onSongRemoved={handleSongRemoved}
             onSongUpdated={handleSongUpdated}
             onSongPromoted={handleSongPromoted}
@@ -520,6 +521,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
           open={isEditSetlistOpen}
           onOpenChange={setIsEditSetlistOpen}
           playlist={playlist}
+          isCreator={isCreator}
           onPlaylistUpdated={handlePlaylistUpdated}
         />
 
@@ -527,7 +529,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
           open={isNotePanelOpen}
           onOpenChange={setIsNotePanelOpen}
           note={selectedNote}
-          isCreator={isCreator}
+          isCreator={canEdit}
           onSave={handleSectionNoteSave}
         />
 

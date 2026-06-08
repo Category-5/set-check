@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { Switch } from "@/components/ui/switch"
 import { createClient } from "@/lib/supabase/client"
 import type { Playlist } from "@/lib/types"
 
@@ -18,6 +19,7 @@ interface EditSetlistDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   playlist: Playlist
+  isCreator: boolean
   onPlaylistUpdated: (updated: Partial<Playlist>) => void
 }
 
@@ -25,11 +27,13 @@ export function EditSetlistDialog({
   open,
   onOpenChange,
   playlist,
+  isCreator,
   onPlaylistUpdated,
 }: EditSetlistDialogProps) {
   const [name, setName] = useState(playlist.name)
   const [description, setDescription] = useState(playlist.description || "")
   const [externalLink, setExternalLink] = useState(playlist.external_link || "")
+  const [publicEdit, setPublicEdit] = useState(playlist.public_edit)
   const [isSaving, setIsSaving] = useState(false)
   const supabase = createClient()
 
@@ -39,6 +43,7 @@ export function EditSetlistDialog({
       setName(playlist.name)
       setDescription(playlist.description || "")
       setExternalLink(playlist.external_link || "")
+      setPublicEdit(playlist.public_edit)
     }
     onOpenChange(newOpen)
   }
@@ -52,6 +57,7 @@ export function EditSetlistDialog({
         name: name.trim(),
         description: description.trim() || null,
         external_link: externalLink.trim() || null,
+        public_edit: publicEdit,
       }
 
       const { error } = await supabase
@@ -109,6 +115,22 @@ export function EditSetlistDialog({
               Link to your setlist on Spotify, Apple Music, or another service
             </p>
           </div>
+
+          {isCreator && (
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="publicEdit" className="text-sm font-medium">Allow public editing</Label>
+                <p className="text-xs text-muted-foreground">
+                  Let anyone promote songs, remove songs, and edit sections
+                </p>
+              </div>
+              <Switch
+                id="publicEdit"
+                checked={publicEdit}
+                onCheckedChange={setPublicEdit}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2">

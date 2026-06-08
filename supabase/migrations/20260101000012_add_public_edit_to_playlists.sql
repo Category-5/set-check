@@ -1,0 +1,1 @@
+ALTER TABLE playlists ADD COLUMN public_edit BOOLEAN NOT NULL DEFAULT false;

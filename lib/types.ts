@@ -36,6 +36,7 @@ export interface Playlist {
   created_at: string
   updated_at: string
   created_by: string | null
+  public_edit: boolean
 }
 
 export interface Vote {

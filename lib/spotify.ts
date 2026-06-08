@@ -106,7 +106,7 @@ export async function searchSpotifyTrack(
 
 export async function searchSpotifyTracks(
   query: string,
-  limit = 20
+  limit = 10
 ): Promise<SpotifyTrackResult[]> {
   const token = await getAccessToken()
   if (!token) return []
