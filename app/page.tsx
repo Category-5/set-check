@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Music, Clock, Users, Vote, Link2, ArrowRight, Download, Copy, Check, ArrowDown } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Logo } from "@/components/logo"
 import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
@@ -175,7 +176,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto flex items-center gap-3">
           <Logo size={40} />
           <span className="text-lg font-semibold text-foreground">Set Check</span>
-          <div className="ml-auto mr-4">
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={scrollToSets}
               className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -183,6 +184,7 @@ export default function HomePage() {
               My Sets
               <ArrowDown className="w-3.5 h-3.5" />
             </button>
+            <ThemeToggle />
           </div>
         </div>
       </header>

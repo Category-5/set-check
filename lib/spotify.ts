@@ -61,6 +61,15 @@ function primaryArtist(artist: string): string {
   return artist.split(/,| & | feat\.? | with /i)[0].trim()
 }
 
+export interface SpotifyTrackResult {
+  title: string
+  artist: string
+  album: string
+  thumbnailUrl: string | null
+  spotifyUrl: string
+  durationMs: number
+}
+
 export async function searchSpotifyTrack(
   title: string,
   artist: string
@@ -92,6 +101,51 @@ export async function searchSpotifyTrack(
   } catch (error) {
     console.error("[spotify] Search error:", error)
     return null
+  }
+}
+
+export async function searchSpotifyTracks(
+  query: string,
+  limit = 20
+): Promise<SpotifyTrackResult[]> {
+  const token = await getAccessToken()
+  if (!token) return []
+
+  const url = `${SEARCH_URL}?q=${encodeURIComponent(query)}&type=track&limit=${limit}&market=US`
+
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (!response.ok) {
+      console.error(`[spotify] Search failed (${response.status}) for query "${query}"`)
+      return []
+    }
+
+    const data = (await response.json()) as {
+      tracks?: {
+        items?: {
+          name: string
+          artists: { name: string }[]
+          album: { name: string; images: { url: string; width: number }[] }
+          external_urls: { spotify: string }
+          duration_ms: number
+        }[]
+      }
+    }
+
+    return (data.tracks?.items ?? []).map((track) => ({
+      title: track.name,
+      artist: track.artists.map((a) => a.name).join(", "),
+      album: track.album.name,
+      thumbnailUrl: track.album.images?.[1]?.url ?? track.album.images?.[0]?.url ?? null,
+      spotifyUrl: track.external_urls.spotify,
+      durationMs: track.duration_ms,
+    }))
+  } catch (error) {
+    console.error("[spotify] Search error:", error)
+    return []
   }
 }
 
