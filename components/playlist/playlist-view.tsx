@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useId } from "react"
 import { PlaylistHeader } from "./playlist-header"
 import { SongList } from "./song-list"
 import { IdeasSection } from "./ideas-section"
@@ -48,6 +48,7 @@ interface PlaylistViewProps {
 }
 
 export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialSectionNotes = [] }: PlaylistViewProps) {
+  const dndId = useId()
   const [playlist, setPlaylist] = useState(initialPlaylist)
   const [songs, setSongs] = useState(initialSongs)
   const [sectionNotes, setSectionNotes] = useState<SectionNote[]>(initialSectionNotes)
@@ -383,6 +384,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
