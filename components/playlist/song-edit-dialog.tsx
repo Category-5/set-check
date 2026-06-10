@@ -44,7 +44,7 @@ export function SongEditDialog({ open, onOpenChange, note: initialNote, external
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="external-link">External Link</Label>
+            <Label htmlFor="external-link">Chord sheet</Label>
             <Input
               id="external-link"
               value={externalLink}

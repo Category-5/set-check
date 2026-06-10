@@ -123,7 +123,7 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
           >
             <span className="flex items-center gap-3">
               <FileMusic className="w-4 h-4" />
-              External Link
+              Chord sheet
             </span>
             <ExternalLink className="w-4 h-4 text-muted-foreground" />
           </Button>

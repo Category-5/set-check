@@ -58,13 +58,22 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
   }
 
+  const title = `${song.title || "Shared Song"} by ${song.artist || "Unknown Artist"}`
+  const description = `Listen to ${song.title} by ${song.artist} on your favorite streaming platform.`
+
   return {
-    title: `${song.title || "Shared Song"} by ${song.artist || "Unknown Artist"} | SetCheck`,
-    description: `Listen to ${song.title} by ${song.artist} on your favorite streaming platform.`,
+    title: `${title} | SetCheck`,
+    description,
     openGraph: {
-      title: `${song.title || "Shared Song"} by ${song.artist || "Unknown Artist"}`,
-      description: `Listen to ${song.title} by ${song.artist} on your favorite streaming platform.`,
-      images: song.thumbnail_url ? [song.thumbnail_url] : undefined,
+      title,
+      description,
+      ...(song.thumbnail_url ? { images: [song.thumbnail_url] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(song.thumbnail_url ? { images: [song.thumbnail_url] } : {}),
     },
   }
 }

@@ -7,36 +7,42 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim()
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
   const supabase = await createClient()
-  
+
   const { data: playlist } = await supabase
     .from("playlists")
     .select("name, description, cover_url")
     .eq("id", id)
     .single()
-  
+
   if (!playlist) {
     return { title: "Setlist Not Found" }
   }
-  
+
   const title = `${playlist.name} - Set Check`
-  const description = playlist.description || "A collaborative setlist on Set Check"
-  
+  const description = playlist.description
+    ? stripHtml(playlist.description)
+    : "A collaborative setlist on Set Check"
+
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      images: playlist.cover_url ? [playlist.cover_url] : [],
+      ...(playlist.cover_url ? { images: [playlist.cover_url] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: playlist.cover_url ? [playlist.cover_url] : [],
+      ...(playlist.cover_url ? { images: [playlist.cover_url] } : {}),
     },
   }
 }
