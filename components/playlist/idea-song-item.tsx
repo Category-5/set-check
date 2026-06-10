@@ -358,6 +358,18 @@ export function IdeaSongItem({
         open={isLinksOpen}
         onOpenChange={setIsLinksOpen}
         song={song}
+        onNoteSave={async (note) => {
+          try {
+            const { error } = await supabase
+              .from("songs")
+              .update({ note: note || null })
+              .eq("id", song.id)
+            if (error) throw error
+            onSongUpdated({ ...song, note: note || null })
+          } catch (error) {
+            console.error("Failed to update note:", error)
+          }
+        }}
       />
 
       <SongEditDialog

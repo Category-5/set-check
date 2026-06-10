@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Music, ExternalLink, Share2, Check, Copy } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Music, ExternalLink, Share2, Check, Copy, FileMusic } from "lucide-react"
 import type { Song, PlatformLinks } from "@/lib/types"
 import { openWithAppFallback } from "@/lib/utils"
 
@@ -17,6 +19,7 @@ interface PlatformLinksDialogProps {
   onOpenChange: (open: boolean) => void
   song: Song | null
   playlistId?: string
+  onNoteSave?: (note: string) => void
 }
 
 const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
@@ -32,9 +35,14 @@ const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
   audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
 }
 
-export function PlatformLinksDialog({ open, onOpenChange, song, playlistId }: PlatformLinksDialogProps) {
+export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNoteSave }: PlatformLinksDialogProps) {
   const [copied, setCopied] = useState(false)
-  
+  const [note, setNote] = useState("")
+
+  useEffect(() => {
+    if (song) setNote(song.note || "")
+  }, [song, open])
+
   if (!song) return null
 
   const links = (song.platform_links || {}) as PlatformLinks
@@ -107,11 +115,46 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId }: Pl
           </div>
         </div>
 
-        {song.note && (
-          <div className="p-3 rounded-lg bg-secondary/50 border border-border mb-4">
-            <p className="text-sm text-muted-foreground italic">{song.note}</p>
-          </div>
+        {song.external_link && (
+          <Button
+            variant="secondary"
+            className="justify-between h-12 mb-2"
+            onClick={() => window.open(song.external_link!, "_blank", "noopener,noreferrer")}
+          >
+            <span className="flex items-center gap-3">
+              <FileMusic className="w-4 h-4" />
+              External Link
+            </span>
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </Button>
         )}
+
+        {onNoteSave ? (
+          <div className="space-y-2 mb-4">
+            <Label htmlFor="platform-dialog-note">Notes</Label>
+            <Textarea
+              id="platform-dialog-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              onBlur={() => {
+                const trimmed = note.trim()
+                if (trimmed !== (song.note || "")) {
+                  onNoteSave(trimmed)
+                }
+              }}
+              placeholder="Why did you add this song? Share your thoughts..."
+              rows={3}
+              className="resize-none"
+            />
+          </div>
+        ) : song.note ? (
+          <div className="space-y-2 mb-4">
+            <Label>Notes</Label>
+            <div className="p-3 rounded-lg bg-secondary/50 border border-border">
+              <p className="text-sm text-muted-foreground italic">{song.note}</p>
+            </div>
+          </div>
+        ) : null}
 
         <div className="grid gap-2">
           {availablePlatforms.length > 0 ? (

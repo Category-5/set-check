@@ -133,6 +133,18 @@ export function SongList({
         onOpenChange={setIsPlatformDialogOpen}
         song={selectedSong}
         playlistId={playlistId}
+        onNoteSave={async (note) => {
+          if (!selectedSong) return
+          const { error } = await supabase
+            .from("songs")
+            .update({ note: note || null })
+            .eq("id", selectedSong.id)
+          if (!error) {
+            const updated = { ...selectedSong, note: note || null }
+            setSelectedSong(updated)
+            onSongUpdated(updated)
+          }
+        }}
       />
 
       <SongEditDialog
