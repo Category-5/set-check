@@ -225,6 +225,22 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
             </Button>
           )}
 
+          {/* Remove - only shown to creator */}
+          {isCreator && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Remove song"
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowDeleteConfirm(true)
+              }}
+              className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+
           {/* More Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -262,7 +278,7 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Remove Song
+                    Remove song
                   </DropdownMenuItem>
                 </>
               )}

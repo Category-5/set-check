@@ -4,7 +4,7 @@ import { Music } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
 import type { Metadata } from "next"
-import { PlatformButton } from "./platform-button"
+import { SongPlatformList } from "./song-platform-list"
 
 interface PlatformLinks {
   spotify?: string
@@ -28,19 +28,6 @@ interface SharedSong {
   thumbnail_url: string | null
   platform_links: PlatformLinks | null
   created_at: string
-}
-
-const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
-  spotify: { name: "Spotify", color: "bg-[#1DB954]" },
-  appleMusic: { name: "Apple Music", color: "bg-[#FA243C]" },
-  youtube: { name: "YouTube", color: "bg-[#FF0000]" },
-  youtubeMusic: { name: "YouTube Music", color: "bg-[#FF0000]" },
-  amazonMusic: { name: "Amazon Music", color: "bg-[#00A8E1]" },
-  deezer: { name: "Deezer", color: "bg-[#FEAA2D]" },
-  tidal: { name: "Tidal", color: "bg-[#000000]" },
-  soundcloud: { name: "SoundCloud", color: "bg-[#FF5500]" },
-  pandora: { name: "Pandora", color: "bg-[#005483]" },
-  audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -94,7 +81,7 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
 
   const sharedSong = song as SharedSong
   const links = (sharedSong.platform_links || {}) as PlatformLinks
-  const availablePlatforms = Object.entries(links).filter(([, url]) => url)
+  const availablePlatforms = Object.entries(links).filter(([, url]) => url) as [string, string][]
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,30 +122,8 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
             </div>
           </div>
 
-          {/* Platform Links */}
-          <div className="space-y-2">
-            <h2 className="text-sm font-medium text-muted-foreground mb-3">
-              Listen on
-            </h2>
-            {availablePlatforms.length > 0 ? (
-              availablePlatforms.map(([platform, url]) => {
-                const info = PLATFORM_INFO[platform] || { name: platform, color: "bg-muted" }
-                return (
-                  <PlatformButton
-                    key={platform}
-                    platform={platform}
-                    url={url as string}
-                    name={info.name}
-                    color={info.color}
-                  />
-                )
-              })
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No streaming links available
-              </p>
-            )}
-          </div>
+          {/* Platform Links & Preference Controls */}
+          <SongPlatformList availablePlatforms={availablePlatforms} />
         </div>
 
         {/* Footer */}
