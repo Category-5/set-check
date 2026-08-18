@@ -4,20 +4,8 @@ import { Music } from "lucide-react"
 import Link from "next/link"
 import { Logo } from "@/components/logo"
 import type { Metadata } from "next"
+import type { PlatformLinks } from "@/lib/types"
 import { SongPlatformList } from "./song-platform-list"
-
-interface PlatformLinks {
-  spotify?: string
-  appleMusic?: string
-  youtube?: string
-  youtubeMusic?: string
-  amazonMusic?: string
-  deezer?: string
-  tidal?: string
-  soundcloud?: string
-  pandora?: string
-  audiomack?: string
-}
 
 interface SharedSong {
   id: string

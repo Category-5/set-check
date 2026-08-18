@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, Loader2, Music, Plus, Link } from "lucide-react"
-import type { Song, OdesliResponse } from "@/lib/types"
+import type { Song, SongLookupResult } from "@/lib/types"
 import type { SpotifyTrackResult } from "@/lib/spotify"
 
 interface AddSongDialogProps {
@@ -36,7 +36,7 @@ export function AddSongDialog({
   const [spotifyQuery, setSpotifyQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-  const [searchResult, setSearchResult] = useState<OdesliResponse | null>(null)
+  const [searchResult, setSearchResult] = useState<SongLookupResult | null>(null)
   const [spotifyResults, setSpotifyResults] = useState<SpotifyTrackResult[]>([])
   const [selectedSpotifyTrack, setSelectedSpotifyTrack] = useState<SpotifyTrackResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -128,7 +128,7 @@ export function AddSongDialog({
         body: JSON.stringify({
           playlistId,
           position: currentPosition,
-          odesliData: searchResult,
+          songData: searchResult,
           addedBy: currentUser,
         }),
       })
@@ -289,7 +289,7 @@ export function AddSongDialog({
 
           <TabsContent value="link" className="space-y-3 overflow-y-auto mt-0 px-1 pb-1">
             <p className="text-sm text-muted-foreground">
-              Paste a link from Spotify, Apple Music, YouTube, or any other music platform.
+              Paste a link from Spotify, Apple Music, or Tidal.
             </p>
 
             <div className="flex gap-2">

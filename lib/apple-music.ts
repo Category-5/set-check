@@ -1,8 +1,4 @@
 // Apple Music / iTunes API helpers.
-// Used as a fallback because the Odesli API (song.link) no longer returns
-// Apple Music links — it returns 400 for apple music URLs and omits appleMusic
-// from linksByPlatform for all other sources.
-//
 // The iTunes Search and Lookup APIs are public and require no key.
 
 const ITUNES_SEARCH_URL = "https://itunes.apple.com/search"

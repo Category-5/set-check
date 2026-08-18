@@ -24,13 +24,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
-import type { OdesliResponse } from "@/lib/types"
+import type { SongLookupResult } from "@/lib/types"
 import { ensureAppleMusicLink } from "@/lib/apple-music"
 
-const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
-
-// Rate limiting: delay between Odesli API calls to avoid 429
-const ODESLI_DELAY_MS = 300
+// Rate limiting: delay between iTunes lookups to avoid getting throttled
+const LOOKUP_DELAY_MS = 300
 
 interface SpotifyEmbedTrack {
   uri: string
@@ -89,61 +87,22 @@ function spotifyUriToUrl(uri: string): string {
   return uri
 }
 
-async function fetchOdesliData(spotifyUrl: string): Promise<OdesliResponse | null> {
-  try {
-    const response = await fetch(
-      `${ODESLI_API}?url=${encodeURIComponent(spotifyUrl)}&userCountry=US`
-    )
+// Resolves cross-platform links for a track pulled from the Spotify embed page.
+// The source is always Spotify here, so we only need to fill in Apple Music.
+async function resolveCrossPlatformLinks(
+  spotifyUrl: string,
+  title: string,
+  artistName: string,
+  thumbnailUrl: string | null
+): Promise<SongLookupResult> {
+  const platformLinks: Record<string, string> = { spotify: spotifyUrl }
+  await ensureAppleMusicLink(platformLinks, title, artistName)
 
-    if (!response.ok) {
-      console.log(`[v0] Odesli failed for ${spotifyUrl}: ${response.status}`)
-      return null
-    }
-
-    const data = await response.json()
-    const entityId = data.entityUniqueId
-    const entity = data.entitiesByUniqueId?.[entityId]
-
-    if (!entity) return null
-
-    const platformLinks: Record<string, string> = {}
-    if (data.linksByPlatform) {
-      const platformMappings: Record<string, string> = {
-        spotify: "spotify",
-        appleMusic: "appleMusic",
-        youtube: "youtube",
-        youtubeMusic: "youtubeMusic",
-        amazonMusic: "amazonMusic",
-        deezer: "deezer",
-        tidal: "tidal",
-        soundcloud: "soundcloud",
-        pandora: "pandora",
-      }
-
-      for (const [platform, key] of Object.entries(platformMappings)) {
-        const link = data.linksByPlatform[platform]
-        if (link?.url) {
-          platformLinks[key] = link.url
-        }
-      }
-    }
-
-    const title = entity.title || "Unknown Title"
-    const artistName = entity.artistName || "Unknown Artist"
-
-    await ensureAppleMusicLink(platformLinks, title, artistName)
-
-    return {
-      title,
-      artistName,
-      album: entity.albumName,
-      thumbnailUrl: entity.thumbnailUrl || null,
-      platformLinks,
-      odesliUrl: data.pageUrl || null,
-    }
-  } catch (error) {
-    console.error(`[v0] Odesli error for ${spotifyUrl}:`, error)
-    return null
+  return {
+    title,
+    artistName,
+    thumbnailUrl,
+    platformLinks,
   }
 }
 
@@ -305,33 +264,30 @@ export async function POST(request: NextRequest) {
       if (!track.uri) continue
 
       const spotifyUrl = spotifyUriToUrl(track.uri)
-      
-      // Fetch magic links from Odesli
-      const odesliData = await fetchOdesliData(spotifyUrl)
-      
+
       // Get artist name from track data
-      const artistName = track.subtitle || 
-                         track.artists?.map(a => a.name).join(", ") || 
+      const artistName = track.subtitle ||
+                         track.artists?.map(a => a.name).join(", ") ||
                          "Unknown Artist"
 
       // Get thumbnail from track images or album
       const thumbnailUrl = track.images?.[0]?.url || null
 
-      // Source URL is always Spotify here, so guarantee the spotify link
-      // even if Odesli's response omitted it.
-      const platformLinks = odesliData?.platformLinks
-        ? { ...odesliData.platformLinks, spotify: odesliData.platformLinks.spotify || spotifyUrl }
-        : { spotify: spotifyUrl }
+      const lookupResult = await resolveCrossPlatformLinks(
+        spotifyUrl,
+        track.title,
+        artistName,
+        thumbnailUrl
+      )
 
-      // Prepare song data - use Odesli data if available, otherwise use embed data
       const songData = {
         id: nanoid(10),
         playlist_id: newPlaylistId,
-        title: odesliData?.title || track.title,
-        artist: odesliData?.artistName || artistName,
-        album: odesliData?.album || track.album?.name || null,
-        thumbnail_url: odesliData?.thumbnailUrl || thumbnailUrl,
-        platform_links: platformLinks,
+        title: lookupResult.title,
+        artist: lookupResult.artistName,
+        album: track.album?.name || null,
+        thumbnail_url: lookupResult.thumbnailUrl,
+        platform_links: lookupResult.platformLinks,
         position,
         added_by: createdBy || null,
         is_promoted: true, // Imported songs go directly to setlist
@@ -349,8 +305,8 @@ export async function POST(request: NextRequest) {
         position++
       }
 
-      // Delay to avoid rate limiting from Odesli
-      await delay(ODESLI_DELAY_MS)
+      // Delay to avoid hammering the iTunes Search API
+      await delay(LOOKUP_DELAY_MS)
     }
 
     const successCount = addedSongs.filter(s => s.success).length

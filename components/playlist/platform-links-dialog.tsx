@@ -25,14 +25,7 @@ interface PlatformLinksDialogProps {
 const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
   spotify: { name: "Spotify", color: "bg-[#1DB954]" },
   appleMusic: { name: "Apple Music", color: "bg-[#FA243C]" },
-  youtube: { name: "YouTube", color: "bg-[#FF0000]" },
-  youtubeMusic: { name: "YouTube Music", color: "bg-[#FF0000]" },
-  amazonMusic: { name: "Amazon Music", color: "bg-[#00A8E1]" },
-  deezer: { name: "Deezer", color: "bg-[#FEAA2D]" },
   tidal: { name: "Tidal", color: "bg-[#000000]" },
-  soundcloud: { name: "SoundCloud", color: "bg-[#FF5500]" },
-  pandora: { name: "Pandora", color: "bg-[#005483]" },
-  audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
 }
 
 export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNoteSave }: PlatformLinksDialogProps) {

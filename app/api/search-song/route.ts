@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import type { OdesliResponse } from "@/lib/types"
-import { ensureSpotifyLink } from "@/lib/spotify"
+import type { SongLookupResult } from "@/lib/types"
+import { ensureSpotifyLink, isSpotifyUrl, resolveSpotifyUrl } from "@/lib/spotify"
 import { isAppleMusicUrl, resolveAppleMusicUrl, ensureAppleMusicLink } from "@/lib/apple-music"
-
-const ODESLI_API = "https://api.song.link/v1-alpha.1/links"
+import { isTidalUrl, resolveTidalUrl } from "@/lib/tidal"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -13,7 +12,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 })
   }
 
-  // Odesli returns 400 for Apple Music URLs — use iTunes API directly instead.
   if (isAppleMusicUrl(url)) {
     try {
       const appleData = await resolveAppleMusicUrl(url)
@@ -29,12 +27,11 @@ export async function GET(request: NextRequest) {
       }
       await ensureSpotifyLink(platformLinks, appleData.title, appleData.artistName)
 
-      const result: OdesliResponse = {
+      const result: SongLookupResult = {
         title: appleData.title,
         artistName: appleData.artistName,
         thumbnailUrl: appleData.thumbnailUrl,
         platformLinks,
-        odesliUrl: null,
       }
       return NextResponse.json(result)
     } catch (error) {
@@ -43,91 +40,65 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  try {
-    const response = await fetch(
-      `${ODESLI_API}?url=${encodeURIComponent(url)}&userCountry=US`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    )
-
-    if (!response.ok) {
-      
-      // Handle rate limiting
-      if (response.status === 429) {
+  if (isSpotifyUrl(url)) {
+    try {
+      const spotifyData = await resolveSpotifyUrl(url)
+      if (!spotifyData) {
         return NextResponse.json(
-          { error: "Too many requests. Please wait a moment and try again." },
-          { status: 429 }
+          { error: "Could not find song. Make sure you pasted a valid music link." },
+          { status: 404 }
         )
       }
-      
-      return NextResponse.json(
-        { error: "Could not find song. Make sure you pasted a valid music link." },
-        { status: 404 }
-      )
-    }
 
-    const data = await response.json()
-
-    // Find the main entity (the song)
-    const entityId = data.entityUniqueId
-    const entity = data.entitiesByUniqueId?.[entityId]
-
-    if (!entity) {
-      return NextResponse.json(
-        { error: "Could not parse song information" },
-        { status: 404 }
-      )
-    }
-
-    // Extract platform links
-    const platformLinks: Record<string, string> = {}
-    
-    if (data.linksByPlatform) {
-      const platformMappings: Record<string, string> = {
-        spotify: "spotify",
-        appleMusic: "appleMusic",
-        youtube: "youtube",
-        youtubeMusic: "youtubeMusic",
-        amazonMusic: "amazonMusic",
-        amazonStore: "amazonStore",
-        deezer: "deezer",
-        tidal: "tidal",
-        soundcloud: "soundcloud",
-        pandora: "pandora",
-        audiomack: "audiomack",
+      const platformLinks: Record<string, string> = {
+        spotify: spotifyData.spotifyUrl,
       }
+      await ensureAppleMusicLink(platformLinks, spotifyData.title, spotifyData.artistName)
 
-      for (const [platform, key] of Object.entries(platformMappings)) {
-        const link = data.linksByPlatform[platform]
-        if (link?.url) {
-          platformLinks[key] = link.url
-        }
+      const result: SongLookupResult = {
+        title: spotifyData.title,
+        artistName: spotifyData.artistName,
+        thumbnailUrl: spotifyData.thumbnailUrl,
+        platformLinks,
       }
+      return NextResponse.json(result)
+    } catch (error) {
+      console.error("Spotify lookup error:", error)
+      return NextResponse.json({ error: "Failed to search for song" }, { status: 500 })
     }
-
-    const title = entity.title || "Unknown Title"
-    const artistName = entity.artistName || "Unknown Artist"
-
-    await ensureSpotifyLink(platformLinks, title, artistName)
-    await ensureAppleMusicLink(platformLinks, title, artistName)
-
-    const result: OdesliResponse = {
-      title,
-      artistName,
-      thumbnailUrl: entity.thumbnailUrl || null,
-      platformLinks,
-      odesliUrl: data.pageUrl || null,
-    }
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error("Odesli API error:", error)
-    return NextResponse.json(
-      { error: "Failed to search for song" },
-      { status: 500 }
-    )
   }
+
+  if (isTidalUrl(url)) {
+    try {
+      const tidalData = await resolveTidalUrl(url)
+      if (!tidalData) {
+        return NextResponse.json(
+          { error: "Could not find song. Make sure you pasted a valid music link." },
+          { status: 404 }
+        )
+      }
+
+      const platformLinks: Record<string, string> = {
+        tidal: tidalData.tidalUrl,
+      }
+      await ensureSpotifyLink(platformLinks, tidalData.title, tidalData.artistName)
+      await ensureAppleMusicLink(platformLinks, tidalData.title, tidalData.artistName)
+
+      const result: SongLookupResult = {
+        title: tidalData.title,
+        artistName: tidalData.artistName,
+        thumbnailUrl: tidalData.thumbnailUrl,
+        platformLinks,
+      }
+      return NextResponse.json(result)
+    } catch (error) {
+      console.error("Tidal lookup error:", error)
+      return NextResponse.json({ error: "Failed to search for song" }, { status: 500 })
+    }
+  }
+
+  return NextResponse.json(
+    { error: "Unsupported link. Paste a Spotify, Apple Music, or Tidal track link." },
+    { status: 400 }
+  )
 }

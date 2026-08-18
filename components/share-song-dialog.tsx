@@ -124,7 +124,7 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
               <Input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Paste a Spotify, Apple Music, YouTube, or any music link..."
+                placeholder="Paste a Spotify, Apple Music, or Tidal link..."
                 disabled={isLoading}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !isLoading) handleShare()

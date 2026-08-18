@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import type { OdesliResponse } from "@/lib/types"
+import type { SongLookupResult } from "@/lib/types"
 import { nanoid } from "nanoid"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { playlistId, position, odesliData, addedBy } = body as {
+    const { playlistId, position, songData: lookupResult, addedBy } = body as {
       playlistId: string
       position: number
-      odesliData: OdesliResponse
+      songData: SongLookupResult
       addedBy?: string | null
     }
 
-    if (!playlistId || position === undefined || !odesliData) {
+    if (!playlistId || position === undefined || !lookupResult) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -37,24 +37,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the song - new songs start in Ideas (is_promoted = false)
-    const songData = {
+    const newSong = {
       id: nanoid(10),
       playlist_id: playlistId,
-      title: odesliData.title,
-      artist: odesliData.artistName,
-      album: odesliData.album || null,
-      thumbnail_url: odesliData.thumbnailUrl,
-      platform_links: odesliData.platformLinks,
+      title: lookupResult.title,
+      artist: lookupResult.artistName,
+      album: lookupResult.album || null,
+      thumbnail_url: lookupResult.thumbnailUrl,
+      platform_links: lookupResult.platformLinks,
       position,
       added_by: addedBy || null,
       is_promoted: false,
     }
-    
-    console.log("[v0] Adding song with data:", JSON.stringify(songData, null, 2))
-    
+
     const { data: song, error: songError } = await supabase
       .from("songs")
-      .insert(songData)
+      .insert(newSong)
       .select()
       .single()
 

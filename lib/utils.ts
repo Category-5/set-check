@@ -30,30 +30,6 @@ export function getAppDeepLink(url: string): string {
       return `music://${hostname}${pathname}${urlObj.search}`
     }
     
-    // YouTube: youtube.com/watch?v=xxx -> youtube://xxx or vnd.youtube://xxx
-    if (hostname.includes('youtube.com')) {
-      const videoId = urlObj.searchParams.get('v')
-      if (videoId) {
-        return `youtube://${videoId}`
-      }
-    }
-    if (hostname === 'youtu.be') {
-      const videoId = pathname.slice(1)
-      if (videoId) {
-        return `youtube://${videoId}`
-      }
-    }
-    
-    // YouTube Music: music.youtube.com -> youtube-music://
-    if (hostname === 'music.youtube.com') {
-      return `youtube-music://${hostname}${pathname}${urlObj.search}`
-    }
-    
-    // Amazon Music: music.amazon.com -> amznmp3://
-    if (hostname.includes('music.amazon')) {
-      return `amznmp3://${hostname}${pathname}${urlObj.search}`
-    }
-    
     // Tidal: tidal.com/browse/track/xxx or listen.tidal.com/track/xxx -> tidal://track/xxx
     if (hostname.includes('tidal.com')) {
       const match = pathname.match(/(?:^\/browse)?\/(track|album|playlist|artist|video)\/([a-zA-Z0-9-]+)/)
@@ -61,25 +37,7 @@ export function getAppDeepLink(url: string): string {
         return `tidal://${match[1]}/${match[2]}`
       }
     }
-    
-    // Deezer: deezer.com/track/xxx -> deezer://track/xxx
-    if (hostname.includes('deezer.com')) {
-      const match = pathname.match(/(?:^\/browse)?\/(track|album|playlist|artist)\/([a-zA-Z0-9-]+)/)
-      if (match) {
-        return `deezer://${match[1]}/${match[2]}`
-      }
-    }
-    
-    // SoundCloud: soundcloud.com/artist/track -> soundcloud://
-    if (hostname.includes('soundcloud.com')) {
-      return `soundcloud://${pathname.slice(1)}`
-    }
-    
-    // Pandora: pandora.com -> pandora://
-    if (hostname.includes('pandora.com')) {
-      return `pandora://${pathname.slice(1)}`
-    }
-    
+
     // Return original URL if no app scheme is available
     return url
   } catch {

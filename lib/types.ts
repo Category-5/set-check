@@ -1,13 +1,7 @@
 export interface PlatformLinks {
   spotify?: string
   appleMusic?: string
-  youtube?: string
-  youtubeMusic?: string
-  amazonMusic?: string
   tidal?: string
-  deezer?: string
-  soundcloud?: string
-  pandora?: string
 }
 
 export interface Song {
@@ -48,13 +42,12 @@ export interface Vote {
 }
 
 // Transformed response from our search-song API
-export interface OdesliResponse {
+export interface SongLookupResult {
   title: string
   artistName: string
   album?: string | null
   thumbnailUrl: string | null
   platformLinks: Record<string, string>
-  odesliUrl?: string | null
 }
 
 export interface SectionNote {
@@ -70,30 +63,3 @@ export interface SectionNote {
 }
 
 export type SetItem = (Song & { type: 'song' }) | SectionNote
-
-// Raw Odesli API response (for reference)
-export interface RawOdesliResponse {
-  entityUniqueId: string
-  userCountry: string
-  pageUrl: string
-  entitiesByUniqueId: {
-    [key: string]: {
-      id: string
-      type: string
-      title?: string
-      artistName?: string
-      thumbnailUrl?: string
-      thumbnailWidth?: number
-      thumbnailHeight?: number
-      apiProvider: string
-      platforms: string[]
-    }
-  }
-  linksByPlatform: {
-    [platform: string]: {
-      country: string
-      url: string
-      entityUniqueId: string
-    }
-  }
-}

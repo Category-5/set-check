@@ -1,6 +1,5 @@
 // Spotify Web API helper using Client Credentials Flow.
-// Used as a fallback when Odesli's response is missing a Spotify link
-// (a known gap when resolving from Tidal, Deezer, etc).
+// Used as a fallback to fill in a Spotify link when resolving from Apple Music or Tidal.
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token"
 const SEARCH_URL = "https://api.spotify.com/v1/search"
@@ -55,10 +54,58 @@ function normalizeForSearch(s: string): string {
 }
 
 // Take only the first artist when multiple are joined by ", " or " & " /
-// " feat. " — Spotify's track artist + Odesli's artistName don't always agree
-// on collaborator order, so the lead artist gives the most reliable match.
+// " feat. " — the lead artist gives the most reliable cross-platform match.
 function primaryArtist(artist: string): string {
   return artist.split(/,| & | feat\.? | with /i)[0].trim()
+}
+
+export function isSpotifyUrl(url: string): boolean {
+  return url.includes("open.spotify.com/track") || url.includes("spotify.link")
+}
+
+function extractTrackId(url: string): string | null {
+  const match = url.match(/\/track\/([a-zA-Z0-9]+)/)
+  return match ? match[1] : null
+}
+
+export interface SpotifyResolvedTrack {
+  title: string
+  artistName: string
+  thumbnailUrl: string | null
+  spotifyUrl: string
+}
+
+// Resolve a Spotify track URL directly via the Spotify API (GET /v1/tracks/{id}).
+export async function resolveSpotifyUrl(url: string): Promise<SpotifyResolvedTrack | null> {
+  const id = extractTrackId(url)
+  if (!id) return null
+
+  const token = await getAccessToken()
+  if (!token) return null
+
+  try {
+    const response = await fetch(`https://api.spotify.com/v1/tracks/${id}?market=US`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) return null
+
+    const track = (await response.json()) as {
+      name: string
+      artists: { name: string }[]
+      album: { images: { url: string; width: number }[] }
+      external_urls: { spotify: string }
+    }
+
+    return {
+      title: track.name,
+      artistName: track.artists.map((a) => a.name).join(", "),
+      thumbnailUrl: track.album.images?.[0]?.url ?? null,
+      spotifyUrl: track.external_urls.spotify,
+    }
+  } catch (error) {
+    console.error("[spotify] Track lookup error:", error)
+    return null
+  }
 }
 
 export interface SpotifyTrackResult {
@@ -149,8 +196,8 @@ export async function searchSpotifyTracks(
   }
 }
 
-// If Odesli failed to return a Spotify link, look it up via Spotify search
-// using the resolved title/artist. Mutates and returns the same object.
+// Fill in a missing Spotify link via Spotify search using the resolved
+// title/artist. Mutates and returns the same object.
 export async function ensureSpotifyLink(
   platformLinks: Record<string, string>,
   title: string,

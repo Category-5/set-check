@@ -133,7 +133,7 @@ describe("SongPlatformList Component", () => {
   it("displays warning banner if preferred service link is missing for a song", () => {
     localStorage.setItem(
       "setcheck_streaming_preference",
-      JSON.stringify({ preferredPlatform: "deezer", rememberPreference: true })
+      JSON.stringify({ preferredPlatform: "napster", rememberPreference: true })
     )
 
     render(<SongPlatformList availablePlatforms={samplePlatforms} />)
