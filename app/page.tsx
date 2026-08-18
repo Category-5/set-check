@@ -10,14 +10,8 @@ import { createClient } from "@/lib/supabase/client"
 import { nanoid } from "nanoid"
 import { ImportSpotifyDialog } from "@/components/import-spotify-dialog"
 import { ShareSongDialog } from "@/components/share-song-dialog"
-import { RECENT_PLAYLISTS_KEY, SHARED_SONGS_KEY } from "@/lib/constants"
-
-interface RecentPlaylist {
-  id: string
-  name: string
-  cover_url: string | null
-  viewedAt: number
-}
+import { SHARED_SONGS_KEY } from "@/lib/constants"
+import { pruneDeletedPlaylists, readRecentPlaylists, type RecentPlaylist } from "@/lib/recent-playlists"
 
 interface RecentSharedSong {
   id: string
@@ -66,19 +60,18 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as RecentPlaylist[]
-        parsed.sort((a, b) => b.viewedAt - a.viewedAt)
-        setRecentPlaylists(parsed)
-      } catch {
-        // Invalid JSON, ignore
-      }
-    }
+    let cancelled = false
+    const stored = readRecentPlaylists()
+    setRecentPlaylists(stored)
+    pruneDeletedPlaylists(stored).then((remaining) => {
+      if (!cancelled && remaining.length !== stored.length) setRecentPlaylists(remaining)
+    })
     loadSharedSongs()
     loadStats()
     setIsLoaded(true)
+    return () => {
+      cancelled = true
+    }
   }, [loadSharedSongs, loadStats])
 
   const copySongUrl = useCallback(async (id: string) => {

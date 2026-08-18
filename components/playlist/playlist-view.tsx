@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { RECENT_PLAYLISTS_KEY } from "@/lib/constants"
+import { readRecentPlaylists, writeRecentPlaylists } from "@/lib/recent-playlists"
 import {
   DndContext,
   closestCenter,
@@ -277,15 +278,7 @@ export function PlaylistView({ playlist: initialPlaylist, initialSongs, initialS
     try {
       const { error } = await supabase.from("playlists").delete().eq("id", playlist.id)
       if (error) throw error
-      try {
-        const stored = localStorage.getItem(RECENT_PLAYLISTS_KEY)
-        if (stored) {
-          const recent = JSON.parse(stored) as { id: string }[]
-          localStorage.setItem(RECENT_PLAYLISTS_KEY, JSON.stringify(recent.filter((p) => p.id !== playlist.id)))
-        }
-      } catch {
-        // ignore localStorage errors
-      }
+      writeRecentPlaylists(readRecentPlaylists().filter((p) => p.id !== playlist.id))
       router.push("/")
     } catch (error) {
       console.error("Failed to delete playlist:", error)
