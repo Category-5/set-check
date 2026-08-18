@@ -47,6 +47,22 @@ export function isTidalUrl(url: string): boolean {
   return url.includes("tidal.com")
 }
 
+// Strip parenthetical/bracketed qualifiers ("(feat. X)", "[Remastered 2011]")
+// that hurt match quality across platforms.
+function normalizeForSearch(s: string): string {
+  return s
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+// Take only the first artist when multiple are joined by ", " or " & " /
+// " feat. " — the lead artist gives the most reliable cross-platform match.
+function primaryArtist(artist: string): string {
+  return artist.split(/,| & | feat\.? | with /i)[0].trim()
+}
+
 function extractTrackId(url: string): string | null {
   const match = url.match(/\/track\/(\d+)/)
   return match ? match[1] : null
@@ -142,4 +158,66 @@ export async function resolveTidalUrl(url: string): Promise<TidalResolvedTrack |
     console.error("[tidal] Track lookup error:", error)
     return null
   }
+}
+
+interface SearchResultsResponse {
+  included?: {
+    id: string
+    type: string
+    attributes?: {
+      externalLinks?: { href: string; meta?: { type: string } }[]
+    }
+  }[]
+}
+
+export async function searchTidalTrack(title: string, artist: string): Promise<string | null> {
+  const token = await getAccessToken()
+  if (!token) return null
+
+  const cleanTitle = normalizeForSearch(title)
+  const cleanArtist = normalizeForSearch(primaryArtist(artist))
+  if (!cleanTitle || !cleanArtist) return null
+
+  const query = encodeURIComponent(`${cleanTitle} ${cleanArtist}`)
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/searchresults/${query}?countryCode=US&include=tracks`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.api+json",
+        },
+      }
+    )
+    if (!response.ok) return null
+
+    const data = (await response.json()) as SearchResultsResponse
+    const track = data.included?.find((item) => item.type === "tracks")
+    if (!track) return null
+
+    const sharingLink = track.attributes?.externalLinks?.find(
+      (link) => link.meta?.type === "TIDAL_SHARING"
+    )
+    return sharingLink?.href ?? null
+  } catch (error) {
+    console.error("[tidal] Search error:", error)
+    return null
+  }
+}
+
+// Fill in a missing Tidal link via Tidal search using the resolved
+// title/artist. Mutates and returns the same object.
+export async function ensureTidalLink(
+  platformLinks: Record<string, string>,
+  title: string,
+  artist: string
+): Promise<Record<string, string>> {
+  if (platformLinks.tidal) return platformLinks
+
+  const tidalUrl = await searchTidalTrack(title, artist)
+  if (tidalUrl) {
+    platformLinks.tidal = tidalUrl
+  }
+  return platformLinks
 }

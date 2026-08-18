@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import type { SongLookupResult } from "@/lib/types"
 import { ensureSpotifyLink, isSpotifyUrl, resolveSpotifyUrl } from "@/lib/spotify"
 import { isAppleMusicUrl, resolveAppleMusicUrl, ensureAppleMusicLink } from "@/lib/apple-music"
-import { isTidalUrl, resolveTidalUrl } from "@/lib/tidal"
+import { isTidalUrl, resolveTidalUrl, ensureTidalLink } from "@/lib/tidal"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
         appleMusic: appleData.appleMusicUrl,
       }
       await ensureSpotifyLink(platformLinks, appleData.title, appleData.artistName)
+      await ensureTidalLink(platformLinks, appleData.title, appleData.artistName)
 
       const result: SongLookupResult = {
         title: appleData.title,
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
         spotify: spotifyData.spotifyUrl,
       }
       await ensureAppleMusicLink(platformLinks, spotifyData.title, spotifyData.artistName)
+      await ensureTidalLink(platformLinks, spotifyData.title, spotifyData.artistName)
 
       const result: SongLookupResult = {
         title: spotifyData.title,

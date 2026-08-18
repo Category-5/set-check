@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { nanoid } from "nanoid"
 import { ensureSpotifyLink, isSpotifyUrl, resolveSpotifyUrl } from "@/lib/spotify"
 import { isAppleMusicUrl, resolveAppleMusicUrl, ensureAppleMusicLink } from "@/lib/apple-music"
-import { isTidalUrl, resolveTidalUrl } from "@/lib/tidal"
+import { isTidalUrl, resolveTidalUrl, ensureTidalLink } from "@/lib/tidal"
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         appleMusic: appleData.appleMusicUrl,
       }
       await ensureSpotifyLink(platformLinks, appleData.title, appleData.artistName)
+      await ensureTidalLink(platformLinks, appleData.title, appleData.artistName)
 
       const songId = nanoid(10)
       const supabase = await createClient()
@@ -72,6 +73,7 @@ export async function POST(request: NextRequest) {
         spotify: spotifyData.spotifyUrl,
       }
       await ensureAppleMusicLink(platformLinks, spotifyData.title, spotifyData.artistName)
+      await ensureTidalLink(platformLinks, spotifyData.title, spotifyData.artistName)
 
       const songId = nanoid(10)
       const supabase = await createClient()

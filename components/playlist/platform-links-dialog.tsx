@@ -84,7 +84,7 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Listen on</DialogTitle>
         </DialogHeader>
