@@ -1,6 +1,9 @@
 // Tidal API v2 helpers using the OAuth Client Credentials flow.
 // Used to resolve Tidal track links directly.
 
+import { normalizeForSearch, primaryArtist } from "./search-normalization"
+import type { ResolvedPlaylist, ResolvedPlaylistTrack } from "./types"
+
 const TOKEN_URL = "https://auth.tidal.com/v1/oauth2/token"
 const API_BASE = "https://openapi.tidal.com/v2"
 
@@ -47,20 +50,13 @@ export function isTidalUrl(url: string): boolean {
   return url.includes("tidal.com")
 }
 
-// Strip parenthetical/bracketed qualifiers ("(feat. X)", "[Remastered 2011]")
-// that hurt match quality across platforms.
-function normalizeForSearch(s: string): string {
-  return s
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/\[[^\]]*\]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
+export function isTidalPlaylistUrl(url: string): boolean {
+  return /tidal\.com\/(?:browse\/)?playlist\/[0-9a-fA-F-]{36}/.test(url)
 }
 
-// Take only the first artist when multiple are joined by ", " or " & " /
-// " feat. " — the lead artist gives the most reliable cross-platform match.
-function primaryArtist(artist: string): string {
-  return artist.split(/,| & | feat\.? | with /i)[0].trim()
+function extractPlaylistId(url: string): string | null {
+  const match = url.match(/\/playlist\/([0-9a-fA-F-]{36})/)
+  return match ? match[1] : null
 }
 
 function extractTrackId(url: string): string | null {
@@ -202,6 +198,177 @@ export async function searchTidalTrack(title: string, artist: string): Promise<s
     return sharingLink?.href ?? null
   } catch (error) {
     console.error("[tidal] Search error:", error)
+    return null
+  }
+}
+
+const MAX_PLAYLIST_TRACKS = 200
+const TRACK_BATCH_SIZE = 20
+
+interface JsonApiRelationship {
+  data?: { id: string; type: string }[]
+}
+
+interface JsonApiTrackResource {
+  id: string
+  type: string
+  attributes?: {
+    title?: string
+    externalLinks?: { href: string; meta?: { type: string } }[]
+  }
+  relationships?: {
+    artists?: JsonApiRelationship
+    albums?: JsonApiRelationship
+    coverArt?: JsonApiRelationship
+  }
+}
+
+interface PlaylistResponse {
+  data: {
+    attributes: { name?: string }
+    relationships: {
+      coverArt?: JsonApiRelationship
+      items?: JsonApiRelationship & { links?: { next?: string } }
+    }
+  }
+  included?: (JsonApiTrackResource | JsonApiArtwork)[]
+}
+
+interface RelationshipPage {
+  data?: { id: string; type: string }[]
+  links?: { next?: string }
+}
+
+function pickArtworkUrl(artwork: JsonApiArtwork | undefined): string | null {
+  if (!artwork) return null
+  const files = [...artwork.attributes.files].sort((a, b) => a.meta.width - b.meta.width)
+  return files[Math.min(2, files.length - 1)]?.href ?? null
+}
+
+async function fetchTrackIds(
+  playlistId: string,
+  initial: PlaylistResponse,
+  headers: Record<string, string>
+): Promise<string[]> {
+  const ids = (initial.data.relationships.items?.data ?? [])
+    .filter((item) => item.type === "tracks")
+    .map((item) => item.id)
+
+  let next = initial.data.relationships.items?.links?.next
+  while (next && ids.length < MAX_PLAYLIST_TRACKS) {
+    const response = await fetch(`${API_BASE}${next.replace(/^\/v2/, "")}`, { headers })
+    if (!response.ok) break
+
+    const page = (await response.json()) as RelationshipPage
+    for (const item of page.data ?? []) {
+      if (item.type === "tracks") ids.push(item.id)
+    }
+    next = page.links?.next
+  }
+
+  return ids.slice(0, MAX_PLAYLIST_TRACKS)
+}
+
+async function fetchTrackBatch(
+  ids: string[],
+  headers: Record<string, string>
+): Promise<ResolvedPlaylistTrack[]> {
+  const response = await fetch(
+    `${API_BASE}/tracks?countryCode=US&filter%5Bid%5D=${ids.join(",")}&include=artists,albums.coverArt`,
+    { headers }
+  )
+  if (!response.ok) return []
+
+  const body = (await response.json()) as { data?: JsonApiTrackResource[]; included?: unknown[] }
+  const included = (body.included ?? []) as (JsonApiTrackResource | JsonApiArtwork | JsonApiArtist)[]
+
+  const artistsById = new Map(
+    included
+      .filter((item): item is JsonApiArtist => item.type === "artists")
+      .map((artist) => [artist.id, artist.attributes.name])
+  )
+  const artworksById = new Map(
+    included
+      .filter((item): item is JsonApiArtwork => item.type === "artworks")
+      .map((artwork) => [artwork.id, artwork])
+  )
+  const albumsById = new Map(
+    included
+      .filter((item): item is JsonApiTrackResource => item.type === "albums")
+      .map((album) => [album.id, album])
+  )
+
+  const tracksById = new Map(
+    (body.data ?? []).map((track) => {
+      const artistName = (track.relationships?.artists?.data ?? [])
+        .map((ref) => artistsById.get(ref.id))
+        .filter(Boolean)
+        .join(", ")
+
+      const album = albumsById.get(track.relationships?.albums?.data?.[0]?.id ?? "")
+      const artworkId = album?.relationships?.coverArt?.data?.[0]?.id
+      const sharingLink = track.attributes?.externalLinks?.find(
+        (link) => link.meta?.type === "TIDAL_SHARING"
+      )
+
+      const resolved: ResolvedPlaylistTrack = {
+        title: track.attributes?.title ?? "Unknown Title",
+        artistName: artistName || "Unknown Artist",
+        album: (album?.attributes as { title?: string } | undefined)?.title ?? null,
+        thumbnailUrl: pickArtworkUrl(artworkId ? artworksById.get(artworkId) : undefined),
+        url: sharingLink?.href ?? `https://tidal.com/browse/track/${track.id}`,
+      }
+      return [track.id, resolved]
+    })
+  )
+
+  return ids
+    .map((id) => tracksById.get(id))
+    .filter((track): track is ResolvedPlaylistTrack => Boolean(track))
+}
+
+// Resolve a public Tidal playlist via the Tidal API: playlist metadata,
+// then the paginated item list, then batched track lookups for artists,
+// album titles, and artwork.
+export async function resolveTidalPlaylist(url: string): Promise<ResolvedPlaylist | null> {
+  const id = extractPlaylistId(url)
+  if (!id) return null
+
+  const token = await getAccessToken()
+  if (!token) return null
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.api+json",
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/playlists/${id}?countryCode=US&include=items,coverArt`,
+      { headers }
+    )
+    if (!response.ok) return null
+
+    const playlist = (await response.json()) as PlaylistResponse
+    const coverArtId = playlist.data.relationships.coverArt?.data?.[0]?.id
+    const coverArt = (playlist.included ?? []).find(
+      (item): item is JsonApiArtwork => item.type === "artworks" && item.id === coverArtId
+    )
+
+    const trackIds = await fetchTrackIds(id, playlist, headers)
+
+    const tracks: ResolvedPlaylistTrack[] = []
+    for (let i = 0; i < trackIds.length; i += TRACK_BATCH_SIZE) {
+      tracks.push(...(await fetchTrackBatch(trackIds.slice(i, i + TRACK_BATCH_SIZE), headers)))
+    }
+
+    return {
+      name: playlist.data.attributes.name || "Imported Setlist",
+      coverUrl: pickArtworkUrl(coverArt),
+      tracks,
+    }
+  } catch (error) {
+    console.error("[tidal] Playlist lookup error:", error)
     return null
   }
 }

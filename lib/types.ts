@@ -50,6 +50,20 @@ export interface SongLookupResult {
   platformLinks: Record<string, string>
 }
 
+export interface ResolvedPlaylistTrack {
+  title: string
+  artistName: string
+  album: string | null
+  thumbnailUrl: string | null
+  url: string
+}
+
+export interface ResolvedPlaylist {
+  name: string
+  coverUrl: string | null
+  tracks: ResolvedPlaylistTrack[]
+}
+
 export interface SectionNote {
   id: string
   playlist_id: string

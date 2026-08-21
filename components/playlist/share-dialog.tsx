@@ -75,7 +75,7 @@ export function ShareDialog({ open, onOpenChange, playlist }: ShareDialogProps) 
             </Button>
           </div>
 
-          {typeof navigator !== "undefined" && navigator.share && (
+          {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
             <Button onClick={handleShare} className="w-full gap-2">
               <Share2 className="w-4 h-4" />
               Share

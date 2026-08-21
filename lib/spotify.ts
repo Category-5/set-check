@@ -1,6 +1,9 @@
 // Spotify Web API helper using Client Credentials Flow.
 // Used as a fallback to fill in a Spotify link when resolving from Apple Music or Tidal.
 
+import { normalizeForSearch, primaryArtist } from "./search-normalization"
+import type { ResolvedPlaylist, ResolvedPlaylistTrack } from "./types"
+
 const TOKEN_URL = "https://accounts.spotify.com/api/token"
 const SEARCH_URL = "https://api.spotify.com/v1/search"
 
@@ -43,29 +46,30 @@ async function getAccessToken(): Promise<string | null> {
   return cachedToken.value
 }
 
-// Strip parenthetical/bracketed qualifiers ("(feat. X)", "[Remastered 2011]")
-// that hurt match quality across platforms.
-function normalizeForSearch(s: string): string {
-  return s
-    .replace(/\([^)]*\)/g, " ")
-    .replace(/\[[^\]]*\]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-// Take only the first artist when multiple are joined by ", " or " & " /
-// " feat. " — the lead artist gives the most reliable cross-platform match.
-function primaryArtist(artist: string): string {
-  return artist.split(/,| & | feat\.? | with /i)[0].trim()
-}
-
 export function isSpotifyUrl(url: string): boolean {
   return url.includes("open.spotify.com/track") || url.includes("spotify.link")
+}
+
+export function isSpotifyPlaylistUrl(url: string): boolean {
+  return /open\.spotify\.com\/playlist\/[a-zA-Z0-9]+/.test(url) ||
+    /spotify:playlist:[a-zA-Z0-9]+/.test(url)
 }
 
 function extractTrackId(url: string): string | null {
   const match = url.match(/\/track\/([a-zA-Z0-9]+)/)
   return match ? match[1] : null
+}
+
+// spotify.link short URLs carry no track ID; follow the redirect chain to
+// the canonical open.spotify.com URL first.
+export async function expandSpotifyShortLink(url: string): Promise<string> {
+  if (!url.includes("spotify.link")) return url
+  try {
+    const response = await fetch(url, { method: "HEAD", redirect: "follow" })
+    return response.url || url
+  } catch {
+    return url
+  }
 }
 
 export interface SpotifyResolvedTrack {
@@ -77,7 +81,8 @@ export interface SpotifyResolvedTrack {
 
 // Resolve a Spotify track URL directly via the Spotify API (GET /v1/tracks/{id}).
 export async function resolveSpotifyUrl(url: string): Promise<SpotifyResolvedTrack | null> {
-  const id = extractTrackId(url)
+  const expandedUrl = await expandSpotifyShortLink(url)
+  const id = extractTrackId(expandedUrl)
   if (!id) return null
 
   const token = await getAccessToken()
@@ -193,6 +198,112 @@ export async function searchSpotifyTracks(
   } catch (error) {
     console.error("[spotify] Search error:", error)
     return []
+  }
+}
+
+interface SpotifyEmbedTrack {
+  uri: string
+  title: string
+  subtitle?: string
+  album?: { name: string }
+  artists?: { name: string }[]
+  images?: { url: string }[]
+}
+
+interface SpotifyEmbedEntity {
+  name?: string
+  images?: { url: string }[]
+  coverArt?: { sources: { url: string }[] }
+  tracks?: { items: SpotifyEmbedTrack[] }
+  trackList?: SpotifyEmbedTrack[]
+}
+
+function extractPlaylistId(url: string): string | null {
+  const webMatch = url.match(/playlist\/([a-zA-Z0-9]+)/)
+  if (webMatch) return webMatch[1]
+
+  const uriMatch = url.match(/spotify:playlist:([a-zA-Z0-9]+)/)
+  if (uriMatch) return uriMatch[1]
+
+  return null
+}
+
+function spotifyUriToUrl(uri: string): string {
+  const parts = uri.split(":")
+  if (parts.length === 3) {
+    return `https://open.spotify.com/${parts[1]}/${parts[2]}`
+  }
+  return uri
+}
+
+// Parse the playlist entity out of a Spotify embed page's __NEXT_DATA__ JSON.
+// Exported for tests.
+export function parseSpotifyEmbedPlaylist(embedHtml: string): ResolvedPlaylist | null {
+  const scriptMatch = embedHtml.match(
+    /<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/
+  )
+  if (!scriptMatch) return null
+
+  let nextData: Record<string, unknown>
+  try {
+    nextData = JSON.parse(scriptMatch[1])
+  } catch {
+    return null
+  }
+
+  const pageProps = (nextData.props as Record<string, unknown>)?.pageProps as Record<string, unknown>
+  const state = pageProps?.state as Record<string, unknown>
+
+  const entity =
+    ((state?.data as Record<string, unknown>)?.entity as SpotifyEmbedEntity) ||
+    (pageProps?.name ? (pageProps as unknown as SpotifyEmbedEntity) : null) ||
+    (pageProps?.data as SpotifyEmbedEntity) ||
+    (state?.item as SpotifyEmbedEntity)
+
+  if (!entity) return null
+
+  // The Spotify embed keeps tracks in `trackList`; older payloads used `tracks.items`.
+  const trackItems = entity.trackList || entity.tracks?.items || []
+
+  const tracks: ResolvedPlaylistTrack[] = trackItems
+    .filter((track) => track.uri)
+    .map((track) => ({
+      title: track.title,
+      artistName:
+        track.subtitle || track.artists?.map((a) => a.name).join(", ") || "Unknown Artist",
+      album: track.album?.name ?? null,
+      thumbnailUrl: track.images?.[0]?.url ?? null,
+      url: spotifyUriToUrl(track.uri),
+    }))
+
+  return {
+    name: entity.name || "Imported Setlist",
+    coverUrl: entity.coverArt?.sources?.[0]?.url || entity.images?.[0]?.url || null,
+    tracks,
+  }
+}
+
+// Resolve a public Spotify playlist without authentication via the embed
+// page, which serializes the full track list into __NEXT_DATA__. The
+// official API refuses playlist tracks under Client Credentials Flow.
+export async function resolveSpotifyPlaylist(url: string): Promise<ResolvedPlaylist | null> {
+  const id = extractPlaylistId(url)
+  if (!id) return null
+
+  try {
+    const response = await fetch(`https://open.spotify.com/embed/playlist/${id}`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+      },
+    })
+    if (!response.ok) return null
+
+    return parseSpotifyEmbedPlaylist(await response.text())
+  } catch (error) {
+    console.error("[spotify] Playlist lookup error:", error)
+    return null
   }
 }
 
