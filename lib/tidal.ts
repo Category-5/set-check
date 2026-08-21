@@ -182,7 +182,7 @@ export async function searchTidalTrack(title: string, artist: string): Promise<s
 
   try {
     const response = await fetch(
-      `${API_BASE}/searchresults/${query}?countryCode=US&include=tracks`,
+      `${API_BASE}/searchResults?filter%5Bquery%5D=${query}&countryCode=US&include=tracks`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
