@@ -2,38 +2,32 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
-import { Moon, Sun } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => setMounted(true), [])
 
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="icon" className="w-9 h-9" disabled>
-        <Sun className="w-4 h-4" />
-      </Button>
-    )
-  }
+  const isDark = mounted && resolvedTheme === 'dark'
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className="w-9 h-9"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+    <button
+      type="button"
+      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      disabled={!mounted}
+      className="flex size-10 items-center justify-center transition-colors hover:bg-sunk disabled:opacity-45"
+      aria-label={mounted ? `Switch to ${isDark ? 'day' : 'night'} mode` : 'Theme'}
     >
-      {theme === 'dark' ? (
-        <Sun className="w-4 h-4" />
-      ) : (
-        <Moon className="w-4 h-4" />
-      )}
-    </Button>
+      <span
+        className="block size-4 rounded-full border-[1.5px] border-ink overflow-hidden"
+        aria-hidden="true"
+      >
+        <span
+          className="block h-full bg-ink transition-[width] duration-200"
+          style={{ width: isDark ? '100%' : '50%' }}
+        />
+      </span>
+    </button>
   )
 }

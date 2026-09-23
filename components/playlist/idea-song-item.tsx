@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowUp, Music, MoreHorizontal, Trash2, FileMusic, GripVertical, Pencil } from "lucide-react"
+import { MoreHorizontal, Trash2, FileMusic, Pencil } from "lucide-react"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "@/components/ui/button"
@@ -53,14 +53,8 @@ export function IdeaSongItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const supabase = createClient()
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: song.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: song.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -70,7 +64,6 @@ export function IdeaSongItem({
   const handlePromote = async () => {
     setIsPromoting(true)
     try {
-      // Get current max position of promoted songs
       const { data: maxPositionData } = await supabase
         .from("songs")
         .select("position")
@@ -88,7 +81,7 @@ export function IdeaSongItem({
         .eq("id", song.id)
 
       if (error) throw error
-      
+
       onSongPromoted({ ...song, is_promoted: true, position: newPosition })
     } catch (error) {
       console.error("Failed to promote song:", error)
@@ -115,7 +108,11 @@ export function IdeaSongItem({
         .eq("id", song.id)
 
       if (error) throw error
-      onSongUpdated({ ...song, note: data.note || null, external_link: data.externalLink || null })
+      onSongUpdated({
+        ...song,
+        note: data.note || null,
+        external_link: data.externalLink || null,
+      })
     } catch (error) {
       console.error("Failed to update song:", error)
     }
@@ -126,150 +123,94 @@ export function IdeaSongItem({
     day: "numeric",
   })
 
-  // Check if the current user is the one who added this song
   const canRemove = currentUser && song.added_by === currentUser
 
   return (
     <>
-      <div 
+      <div
         ref={setNodeRef}
         style={style}
-        className={`group rounded-lg bg-card hover:bg-secondary/50 transition-colors p-2 sm:p-3 ${isDragging ? "opacity-50 shadow-lg z-50" : ""}`}
+        className={`group flex items-stretch border-b border-rule bg-stock transition-colors last:border-b-0 hover:bg-sunk ${
+          isDragging ? "opacity-40" : ""
+        }`}
       >
-        {/* Main Row */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Drag Handle - Only show for creator */}
-          {isCreator && (
-            <button
-              {...attributes}
-              {...listeners}
-              className="touch-none text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
-            >
-              <GripVertical className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          )}
+        <div className="flex min-w-0 flex-1 items-start gap-2 px-2 py-2 sm:items-center sm:gap-3 sm:px-3">
+          <span
+            {...(isCreator ? { ...attributes, ...listeners } : {})}
+            className={`mt-3.5 block size-3 shrink-0 touch-none rounded-full border-[1.5px] border-ballpoint sm:mt-0 ${
+              isCreator ? "cursor-grab active:cursor-grabbing" : ""
+            }`}
+            aria-hidden="true"
+          />
 
-          {/* Thumbnail */}
-          <button
-            onClick={() => setIsLinksOpen(true)}
-            className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all relative"
-          >
-            {song.thumbnail_url ? (
+          {song.thumbnail_url && (
+            <button
+              onClick={() => setIsLinksOpen(true)}
+              className="relative size-10 shrink-0 overflow-hidden rounded-[2px] border border-rule bg-sunk"
+              aria-label={`Open links for ${song.title}`}
+            >
               <Image
                 src={song.thumbnail_url}
-                alt={song.title}
+                alt=""
                 fill
+                sizes="40px"
                 className="object-cover"
                 crossOrigin="anonymous"
               />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Music className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-              </div>
-            )}
-          </button>
+            </button>
+          )}
 
-          {/* Song info */}
-          <button
-            onClick={() => setIsLinksOpen(true)}
-            className="flex-1 min-w-0 text-left"
-          >
-            <p className="font-medium text-sm sm:text-base text-foreground truncate hover:underline">{song.title}</p>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">{song.artist}</p>
-          </button>
-
-          {/* Added at - Hidden on mobile */}
-          <span className="hidden sm:block text-xs text-muted-foreground">{addedAt}</span>
-
-          {/* Actions - Hidden on mobile, shown on desktop */}
-          <div className="hidden sm:flex items-center gap-1">
-            {/* Vote Buttons */}
-            <VoteButtons songId={song.id} currentUser={currentUser} />
-
-            {/* External Link */}
-            {song.external_link && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 text-primary"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  window.open(song.external_link!, "_blank", "noopener,noreferrer")
-                }}
-              >
-                <FileMusic className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* Promote button - only shown to creator */}
-            {isCreator && (
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label="Promote song"
-                onClick={handlePromote}
-                disabled={isPromoting}
-                className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                <ArrowUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Promote</span>
-              </Button>
-            )}
-
-            {/* Remove - only shown to the user who added the song */}
-            {canRemove && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Remove song"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowDeleteConfirm(true)
-                }}
-                className="shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-
-            {/* More options */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
-                  <FileMusic className="mr-2 h-4 w-4" />
-                  Open links
-                </DropdownMenuItem>
-                {canRemove && (
-                  <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Remove
-                  </DropdownMenuItem>
+          <div className="min-w-0 flex-1">
+            <button onClick={() => setIsLinksOpen(true)} className="block w-full min-w-0 text-left">
+              <span className="flex items-center gap-2">
+                <span className="font-display truncate text-sm font-medium leading-tight sm:text-base">{song.title}</span>
+                {song.note && (
+                  <span className="label shrink-0 border border-rule px-1 py-0.5 leading-none">
+                    note
+                  </span>
                 )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </span>
+              <span className="block truncate text-xs leading-tight text-muted-foreground">
+                {song.artist}
+              </span>
+            </button>
+
+            <div className="mt-2 flex items-center gap-2 sm:hidden">
+              <VoteButtons songId={song.id} currentUser={currentUser} />
+              {song.external_link && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="text-rubric"
+                  aria-label="Open attached link"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    window.open(song.external_link!, "_blank", "noopener,noreferrer")
+                  }}
+                >
+                  <FileMusic className="h-4 w-4" />
+                </Button>
+              )}
+              <span className="ml-auto num text-[0.625rem] text-muted-foreground">
+                {addedAt}
+              </span>
+            </div>
           </div>
-        </div>
 
-        {/* Mobile Actions Row */}
-        <div className="flex sm:hidden items-center justify-end gap-1 mt-2 pt-2 border-t border-border/50">
-          {/* Vote Buttons */}
-          <VoteButtons songId={song.id} currentUser={currentUser} />
+          <span className="hidden num text-[0.625rem] text-muted-foreground sm:block">
+            {addedAt}
+          </span>
 
-          {/* External Link */}
+          <span className="hidden sm:block">
+            <VoteButtons songId={song.id} currentUser={currentUser} />
+          </span>
+
           {song.external_link && (
             <Button
               variant="ghost"
-              size="icon"
-              className="shrink-0 text-primary"
+              size="icon-sm"
+              className="hidden text-rubric sm:inline-flex"
+              aria-label="Open attached link"
               onClick={(e) => {
                 e.stopPropagation()
                 window.open(song.external_link!, "_blank", "noopener,noreferrer")
@@ -279,76 +220,72 @@ export function IdeaSongItem({
             </Button>
           )}
 
-          {/* Promote button - only shown to creator */}
-          {isCreator && (
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label="Promote song"
-              onClick={handlePromote}
-              disabled={isPromoting}
-              className="gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-          )}
-
-          {/* Remove - only shown to the user who added the song */}
-          {canRemove && (
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Remove song"
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowDeleteConfirm(true)
-              }}
-              className="shrink-0 text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )}
-
-          {/* More options */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`More actions for ${song.title}`}
+                className="mt-2 shrink-0 text-muted-foreground sm:mt-0"
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                Edit note &amp; link
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsLinksOpen(true)}>
                 <FileMusic className="mr-2 h-4 w-4" />
                 Open links
               </DropdownMenuItem>
               {canRemove && (
-                <DropdownMenuItem onClick={() => setShowDeleteConfirm(true)} className="text-destructive">
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-rubric focus:text-rubric"
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Remove
+                  Remove idea
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {isCreator && (
+          <button
+            type="button"
+            onClick={handlePromote}
+            disabled={isPromoting}
+            aria-label={`Move ${song.title} into the set`}
+            className="flex w-12 shrink-0 flex-col items-center justify-center gap-1 border-l border-rule text-muted-foreground transition-colors hover:bg-rubric hover:text-on-rubric disabled:opacity-40 sm:w-16"
+          >
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 20V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="hidden text-[0.625rem] leading-none sm:block">
+              {isPromoting ? "…" : "to set"}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove song?</AlertDialogTitle>
+            <AlertDialogTitle>Remove {song.title} from your ideas?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove &quot;{song.title}&quot; from your ideas? This action cannot be undone.
+              This deletes the song and its votes. It cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Remove
+            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="border border-rubric bg-transparent text-rubric hover:bg-rubric hover:text-on-rubric"
+            >
+              Remove idea
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

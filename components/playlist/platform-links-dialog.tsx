@@ -22,17 +22,17 @@ interface PlatformLinksDialogProps {
   onNoteSave?: (note: string) => void
 }
 
-const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
-  spotify: { name: "Spotify", color: "bg-[#1DB954]" },
-  appleMusic: { name: "Apple Music", color: "bg-[#FA243C]" },
-  youtube: { name: "YouTube", color: "bg-[#FF0000]" },
-  youtubeMusic: { name: "YouTube Music", color: "bg-[#FF0000]" },
-  amazonMusic: { name: "Amazon Music", color: "bg-[#00A8E1]" },
-  deezer: { name: "Deezer", color: "bg-[#FEAA2D]" },
-  tidal: { name: "Tidal", color: "bg-[#000000]" },
-  soundcloud: { name: "SoundCloud", color: "bg-[#FF5500]" },
-  pandora: { name: "Pandora", color: "bg-[#005483]" },
-  audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
+const PLATFORM_INFO: Record<string, { name: string }> = {
+  spotify: { name: "Spotify" },
+  appleMusic: { name: "Apple Music" },
+  youtube: { name: "YouTube" },
+  youtubeMusic: { name: "YouTube Music" },
+  amazonMusic: { name: "Amazon Music" },
+  deezer: { name: "Deezer" },
+  tidal: { name: "Tidal" },
+  soundcloud: { name: "SoundCloud" },
+  pandora: { name: "Pandora" },
+  audiomack: { name: "Audiomack" },
 }
 
 export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNoteSave }: PlatformLinksDialogProps) {
@@ -59,7 +59,6 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback for older browsers
       const textArea = document.createElement("textarea")
       textArea.value = shareUrl
       document.body.appendChild(textArea)
@@ -81,7 +80,6 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
           url: shareUrl,
         })
       } catch {
-        // User cancelled or share failed, fall back to copy
         handleCopy()
       }
     } else {
@@ -93,45 +91,43 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Listen on</DialogTitle>
+          <DialogTitle className="font-display text-lg font-semibold">Open this song</DialogTitle>
         </DialogHeader>
 
-        <div className="flex items-center gap-4 mb-4 overflow-hidden">
-          <div className="shrink-0 w-16 h-16 rounded bg-secondary flex items-center justify-center overflow-hidden">
+        <div className="-mt-1 flex items-center gap-4 overflow-hidden">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden border border-rule-strong bg-sunk">
             {song.thumbnail_url ? (
               <img
                 src={song.thumbnail_url}
-                alt={song.title}
-                className="w-full h-full object-cover"
+                alt=""
+                className="size-full object-cover"
                 crossOrigin="anonymous"
               />
             ) : (
-              <Music className="w-8 h-8 text-muted-foreground" />
+              <Music className="size-7 text-muted-foreground" />
             )}
           </div>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <p className="font-semibold text-foreground truncate max-w-full">{song.title}</p>
-            <p className="text-sm text-muted-foreground truncate max-w-full">{song.artist}</p>
+            <p className="max-w-full truncate text-lg leading-tight">{song.title}</p>
+            <p className="max-w-full truncate text-sm text-muted-foreground">{song.artist}</p>
           </div>
         </div>
 
         {song.external_link && (
-          <Button
-            variant="secondary"
-            className="justify-between h-12 mb-2"
+          <button
+            type="button"
+            className="group flex h-12 w-full items-center gap-3 border border-rule-strong px-4 text-left transition-colors hover:bg-ink hover:text-stock"
             onClick={() => window.open(song.external_link!, "_blank", "noopener,noreferrer")}
           >
-            <span className="flex items-center gap-3">
-              <FileMusic className="w-4 h-4" />
-              Chord sheet
-            </span>
-            <ExternalLink className="w-4 h-4 text-muted-foreground" />
-          </Button>
+            <FileMusic className="size-4" />
+            <span className="flex-1 text-sm">Chord sheet</span>
+            <ExternalLink className="size-4 text-muted-foreground group-hover:text-stock" />
+          </button>
         )}
 
         {onNoteSave ? (
           <div className="space-y-2 mb-4">
-            <Label htmlFor="platform-dialog-note">Notes</Label>
+            <Label htmlFor="platform-dialog-note" className="label">note</Label>
             <Textarea
               id="platform-dialog-note"
               value={note}
@@ -142,73 +138,68 @@ export function PlatformLinksDialog({ open, onOpenChange, song, playlistId, onNo
                   onNoteSave(trimmed)
                 }
               }}
-              placeholder="Why did you add this song? Share your thoughts..."
+              placeholder="Why this one? Key, arrangement, where it sits…"
               rows={3}
               className="resize-none"
             />
           </div>
         ) : song.note ? (
           <div className="space-y-2 mb-4">
-            <Label>Notes</Label>
-            <div className="p-3 rounded-lg bg-secondary/50 border border-border">
-              <p className="text-sm text-muted-foreground italic">{song.note}</p>
+            <Label className="label">note</Label>
+            <div className="border border-rule bg-sunk p-3">
+              <p className="text-sm text-muted-foreground">{song.note}</p>
             </div>
           </div>
         ) : null}
 
-        <div className="grid gap-2">
-          {availablePlatforms.length > 0 ? (
-            availablePlatforms.map(([platform, url]) => {
-              const info = PLATFORM_INFO[platform] || { name: platform, color: "bg-muted" }
-              return (
-                <Button
-                  key={platform}
-                  variant="secondary"
-                  className="justify-between h-12"
-                  onClick={() => openWithAppFallback(url as string)}
-                >
-                  <span className="flex items-center gap-3">
-                    <span className={`w-2 h-2 rounded-full ${info.color}`} />
-                    {info.name}
-                  </span>
-                  <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                </Button>
-              )
-            })
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No streaming links available
-            </p>
-          )}
+        <div>
+          <p className="label mb-2">Open it in</p>
+          <div className="border border-rule-strong">
+            {availablePlatforms.length > 0 ? (
+              availablePlatforms.map(([platform, url]) => {
+                const info = PLATFORM_INFO[platform] || { name: platform }
+                return (
+                  <button
+                    key={platform}
+                    type="button"
+                    className="group flex h-12 w-full items-center gap-3 border-b border-rule px-4 text-left transition-colors last:border-b-0 hover:bg-ink hover:text-stock"
+                    onClick={() => openWithAppFallback(url as string)}
+                  >
+                    <span
+                      className="size-2.5 shrink-0 bg-ink group-hover:bg-stock"
+                      aria-hidden="true"
+                    />
+                    <span className="flex-1 text-sm">{info.name}</span>
+                    <ExternalLink className="size-4 text-muted-foreground group-hover:text-stock" />
+                  </button>
+                )
+              })
+            ) : (
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                No streaming links were found for this song.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Share this song */}
         {playlistId && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground mb-2">Share this song</p>
+          <div className="border-t border-rule pt-4">
+            <p className="label mb-2">send it to someone</p>
             <div className="flex gap-2">
-              <Button
-                onClick={handleShare}
-                variant="outline"
-                className="flex-1 gap-2"
-              >
-                <Share2 className="w-4 h-4" />
-                Share
+              <Button onClick={handleShare} variant="outline" className="flex-1 gap-2">
+                <Share2 className="size-4" />
+                share
               </Button>
-              <Button
-                onClick={handleCopy}
-                variant="secondary"
-                className="shrink-0 gap-2"
-              >
+              <Button onClick={handleCopy} variant="secondary" className="shrink-0 gap-2">
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-500" />
-                    Copied
+                    <Check className="size-4 text-ballpoint" />
+                    copied
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
-                    Copy Link
+                    <Copy className="size-4" />
+                    copy link
                   </>
                 )}
               </Button>

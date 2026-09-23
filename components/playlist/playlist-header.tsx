@@ -1,56 +1,26 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useRef } from "react"
 import { RichTextDisplay } from "@/components/ui/rich-text-display"
-import { Share2, Music, ImagePlus, FileMusic } from "lucide-react"
+import { Share2, ImagePlus, FileMusic } from "lucide-react"
 import type { Playlist } from "@/lib/types"
 import { openWithAppFallback } from "@/lib/utils"
 
 interface PlaylistHeaderProps {
   playlist: Playlist
   songCount: number
+  spokenCount?: number
   onShareClick: () => void
 }
 
 export function PlaylistHeader({
   playlist,
   songCount,
+  spokenCount = 0,
   onShareClick,
 }: PlaylistHeaderProps) {
   const [isUploading, setIsUploading] = useState(false)
-  const [scrollScale, setScrollScale] = useState(1)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Handle scroll-based scaling for mobile only
-  useEffect(() => {
-    const handleScroll = () => {
-      // Only apply scaling on mobile (sm breakpoint is 640px)
-      if (window.innerWidth >= 640) {
-        setScrollScale(1)
-        return
-      }
-      const scrollY = window.scrollY
-      const maxScroll = 150 // Max scroll distance for full shrink
-      const minScale = 0.6 // Minimum scale
-      const scale = Math.max(minScale, 1 - (scrollY / maxScroll) * (1 - minScale))
-      setScrollScale(scale)
-    }
-
-    const handleResize = () => {
-      // Reset scale on resize to desktop
-      if (window.innerWidth >= 640) {
-        setScrollScale(1)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    window.addEventListener("resize", handleResize, { passive: true })
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
-      window.removeEventListener("resize", handleResize)
-    }
-  }, [])
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -68,7 +38,6 @@ export function PlaylistHeader({
       })
 
       if (response.ok) {
-        // Refresh the page to get updated cover
         window.location.reload()
       }
     } catch (error) {
@@ -79,77 +48,82 @@ export function PlaylistHeader({
   }
 
   return (
-    <header className="flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-start">
-      {/* Cover Image - Centered on mobile with scroll shrinking */}
-      <div className="relative group shrink-0 flex justify-center sm:justify-start">
-        <div 
-          className="w-40 h-40 sm:w-48 sm:h-48 rounded-lg bg-secondary flex items-center justify-center overflow-hidden shadow-xl origin-top will-change-transform"
-          style={{ transform: `scale(${scrollScale})`, transition: 'none' }}
-        >
-          {playlist.cover_url ? (
+    <header className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-7">
+      {playlist.cover_url && (
+        <div className="group relative size-20 shrink-0 self-start sm:size-28">
+          <div className="flex size-full items-center justify-center overflow-hidden rounded-[3px] border border-rule bg-sunk shadow-lift">
             <img
               src={playlist.cover_url}
-              alt={playlist.name}
-              className="w-full h-full object-cover"
+              alt=""
+              className="size-full object-cover"
               crossOrigin="anonymous"
             />
+          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-[3px] bg-ink/70 text-stock opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-40"
+            aria-label={isUploading ? "Uploading cover" : "Change cover image"}
+          >
+            <ImagePlus className="size-5" />
+          </button>
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
+      <div className="min-w-0 flex-1">
+
+        <h1 className="font-display text-3xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl">{playlist.name}</h1>
+
+        <div className="mt-4 max-w-[62ch]">
+          {playlist.description ? (
+            <RichTextDisplay content={playlist.description} />
           ) : (
-            <Music className="w-16 h-16 sm:w-20 sm:h-20 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No description yet.</p>
           )}
         </div>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg will-change-transform"
-          style={{ transform: `scale(${scrollScale})`, transformOrigin: 'top center', transition: 'none' }}
-        >
-          <ImagePlus className="w-8 h-8 text-white" />
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          className="hidden"
-        />
-      </div>
 
-      {/* Info - Centered on mobile */}
-      <div className="flex-1 min-w-0 text-center sm:text-left">
-        <p className="text-sm font-medium text-primary uppercase tracking-wider mb-1">
-          Set Check
-        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
+          <p className="num text-[0.6875rem] text-muted-foreground">
+            {String(songCount).padStart(2, "0")} {songCount === 1 ? "song" : "songs"}
+            {spokenCount > 0 && ` · ${String(spokenCount).padStart(2, "0")} spoken`}
+          </p>
 
-        {/* Name */}
-        <h1 className="text-2xl sm:text-4xl font-bold text-foreground truncate text-balance mb-2">
-          {playlist.name}
-        </h1>
-
-        {/* Description */}
-        {playlist.description ? (
-          <RichTextDisplay content={playlist.description} className="mb-4" />
-        ) : (
-          <p className="text-muted-foreground text-sm mb-4">No description</p>
-        )}
-
-        {/* Stats & Actions - Centered on mobile */}
-        <div className="flex items-center justify-center sm:justify-start gap-4">
-          <span className="text-sm text-muted-foreground">
-            {songCount} {songCount === 1 ? "song" : "songs"}
-          </span>
-          {playlist.external_link && (
-            <Button 
-              onClick={() => openWithAppFallback(playlist.external_link!)} 
-              size="icon" 
-              variant="outline"
-              className="rounded-full h-10 w-10"
+          <div className="flex items-center gap-2">
+            {playlist.external_link && (
+              <button
+                onClick={() => openWithAppFallback(playlist.external_link!)}
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-[3px] border border-rule-strong bg-sheet px-3 text-sm shadow-lift transition-colors hover:bg-sunk"
+              >
+                <FileMusic className="size-4" />
+                Chart
+              </button>
+            )}
+            {!playlist.cover_url && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="flex h-10 cursor-pointer items-center gap-2 rounded-[3px] px-2 text-sm text-muted-foreground transition-colors hover:text-ink disabled:opacity-45"
+              >
+                <ImagePlus className="size-4" />
+                {isUploading ? "Adding cover…" : "Add a cover"}
+              </button>
+            )}
+            <button
+              onClick={onShareClick}
+              className="flex h-10 cursor-pointer items-center gap-2 rounded-[3px] bg-rubric px-4 text-sm font-medium text-on-rubric shadow-lift transition-[filter] hover:brightness-[1.08]"
             >
-              <FileMusic className="w-5 h-5" />
-            </Button>
-          )}
-          <Button onClick={onShareClick} size="icon" className="rounded-full h-10 w-10">
-            <Share2 className="w-5 h-5" />
-          </Button>
+              <Share2 className="size-4" />
+              Share
+            </button>
+          </div>
         </div>
       </div>
     </header>

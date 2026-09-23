@@ -1,29 +1,33 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
 import { openWithAppFallback } from "@/lib/utils"
 
 interface PlatformButtonProps {
   platform: string
   url: string
   name: string
-  color: string
 }
 
-export function PlatformButton({ platform, url, name, color }: PlatformButtonProps) {
+export function PlatformButton({ platform, url, name }: PlatformButtonProps) {
   return (
-    <Button
+    <button
       key={platform}
-      variant="secondary"
-      className="w-full justify-between h-12"
+      type="button"
       onClick={() => openWithAppFallback(url)}
+      className="group flex h-14 w-full cursor-pointer items-center gap-4 border-b border-rule px-5 text-left transition-colors last:border-b-0 hover:bg-sunk"
     >
-      <span className="flex items-center gap-3">
-        <span className={`w-2 h-2 rounded-full ${color}`} />
-        {name}
-      </span>
-      <ExternalLink className="w-4 h-4 text-muted-foreground" />
-    </Button>
+      <span className="size-1.5 shrink-0 rounded-full bg-muted-foreground transition-colors group-hover:bg-rubric" aria-hidden="true" />
+      <span className="font-display flex-1 text-base font-medium">{name}</span>
+      <svg
+        viewBox="0 0 24 24"
+        className="size-4 text-muted-foreground transition-colors group-hover:text-rubric"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        aria-hidden="true"
+      >
+        <path d="M7 17 17 7M9 7h8v8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
   )
 }

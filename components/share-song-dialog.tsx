@@ -185,7 +185,7 @@ export function ShareSongDialog({ open, onOpenChange }: ShareSongDialogProps) {
                   <Input
                     value={shareUrl}
                     readOnly
-                    className="font-mono text-sm"
+                    className="num text-sm"
                   />
                   <Button
                     onClick={handleCopy}

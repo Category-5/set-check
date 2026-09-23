@@ -40,28 +40,27 @@ export function NamePromptDialog({ onNameSet }: NamePromptDialogProps) {
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="text-2xl">Welcome to Set Check</DialogTitle>
+          <DialogTitle className="font-display text-2xl font-semibold">What should we call you?</DialogTitle>
           <DialogDescription>
-            Enter your first name to get started. This helps others know who added songs to the playlist.
+            A first name is all this needs — no account, no email. It goes beside
+            the songs you add so your team knows who brought what.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="name">Your first name</Label>
+            <Label htmlFor="name" className="label">
+              first name
+            </Label>
             <Input
               id="name"
-              placeholder="Enter your name..."
+              placeholder="Ren"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
           </div>
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={!name.trim()}
-          >
-            Continue
+          <Button type="submit" size="lg" className="w-full" disabled={!name.trim()}>
+            continue
           </Button>
         </form>
       </DialogContent>

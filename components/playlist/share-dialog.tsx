@@ -44,7 +44,6 @@ export function ShareDialog({ open, onOpenChange, playlist }: ShareDialogProps) 
           url: shareUrl,
         })
       } catch (err) {
-        // User cancelled or share failed
         console.error("Share failed:", err)
       }
     } else {
@@ -65,17 +64,22 @@ export function ShareDialog({ open, onOpenChange, playlist }: ShareDialogProps) 
           </p>
 
           <div className="flex gap-2">
-            <Input value={shareUrl} readOnly className="bg-secondary" />
-            <Button onClick={handleCopy} variant="outline" className="shrink-0">
+            <Input value={shareUrl} readOnly className="bg-sunk num text-xs" />
+            <Button
+              onClick={handleCopy}
+              variant="outline"
+              className="shrink-0"
+              aria-label={copied ? "Link copied" : "Copy link"}
+            >
               {copied ? (
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="w-4 h-4 text-ballpoint" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
             </Button>
           </div>
 
-          {typeof navigator !== "undefined" && navigator.share && (
+          {typeof navigator !== "undefined" && "share" in navigator && (
             <Button onClick={handleShare} className="w-full gap-2">
               <Share2 className="w-4 h-4" />
               Share

@@ -32,16 +32,8 @@ const ICONS = [
 ]
 
 const COLORS = [
-  { id: "slate", bg: "bg-slate-100 dark:bg-slate-800", border: "border-slate-300 dark:border-slate-600", swatch: "bg-slate-400" },
-  { id: "red", bg: "bg-red-50 dark:bg-red-950", border: "border-red-200 dark:border-red-800", swatch: "bg-red-500" },
-  { id: "orange", bg: "bg-orange-50 dark:bg-orange-950", border: "border-orange-200 dark:border-orange-800", swatch: "bg-orange-500" },
-  { id: "amber", bg: "bg-amber-50 dark:bg-amber-950", border: "border-amber-200 dark:border-amber-800", swatch: "bg-amber-500" },
-  { id: "green", bg: "bg-green-50 dark:bg-green-950", border: "border-green-200 dark:border-green-800", swatch: "bg-green-500" },
-  { id: "teal", bg: "bg-teal-50 dark:bg-teal-950", border: "border-teal-200 dark:border-teal-800", swatch: "bg-teal-500" },
-  { id: "blue", bg: "bg-blue-50 dark:bg-blue-950", border: "border-blue-200 dark:border-blue-800", swatch: "bg-blue-500" },
-  { id: "indigo", bg: "bg-indigo-50 dark:bg-indigo-950", border: "border-indigo-200 dark:border-indigo-800", swatch: "bg-indigo-500" },
-  { id: "purple", bg: "bg-purple-50 dark:bg-purple-950", border: "border-purple-200 dark:border-purple-800", swatch: "bg-purple-500" },
-  { id: "pink", bg: "bg-pink-50 dark:bg-pink-950", border: "border-pink-200 dark:border-pink-800", swatch: "bg-pink-500" },
+  { id: "slate", label: "normal", preview: "bg-rubric" },
+  { id: "amber", label: "quiet", preview: "bg-rubric/40" },
 ]
 
 export { COLORS }
@@ -74,38 +66,37 @@ export function SectionNotePanel({ open, onOpenChange, note, isCreator, onSave }
     onOpenChange(false)
   }
 
-
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{isCreator ? (note?.id.startsWith("temp_") ? "Add Note" : "Edit Note") : "View Note"}</SheetTitle>
+          <SheetTitle className="font-display text-xl font-semibold">{isCreator ? (note?.id.startsWith("temp_") ? "Add a spoken moment" : "Edit this moment") : note?.title || "Moment"}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 space-y-4 px-4">
           {isCreator ? (
             <>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Title</label>
+                <span className="label mb-2 block">title</span>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Opening Prayer, Scripture Reading..."
+                  placeholder="Call to worship"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Icon</label>
+                <span className="label mb-2 block">icon</span>
                 <div className="grid grid-cols-7 gap-1.5">
                   {ICONS.map(({ id, Icon, label }) => (
                     <button
                       key={id}
                       onClick={() => setIcon(id)}
                       className={cn(
-                        "flex items-center justify-center w-9 h-9 rounded-lg border-2 transition-all",
+                        "flex h-10 w-10 items-center justify-center border transition-colors",
                         icon === id
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border bg-card text-muted-foreground hover:border-primary/50"
+                          ? "border-ink bg-ink text-stock"
+                          : "border-rule-strong text-muted-foreground hover:bg-sunk hover:text-ink"
                       )}
                       title={label}
                     >
@@ -116,31 +107,34 @@ export function SectionNotePanel({ open, onOpenChange, note, isCreator, onSave }
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Color</label>
-                <div className="flex gap-2 flex-wrap">
-                  {COLORS.map(({ id, swatch }) => (
+                <span className="label mb-2 block">weight in the order</span>
+                <div className="flex gap-2">
+                  {COLORS.map(({ id, label, preview }) => (
                     <button
                       key={id}
+                      type="button"
                       onClick={() => setColor(id)}
+                      aria-pressed={color === id}
                       className={cn(
-                        "w-7 h-7 rounded-full transition-all",
-                        swatch,
+                        "flex h-10 items-center gap-2 border px-3 text-sm transition-colors",
                         color === id
-                          ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110"
-                          : "hover:scale-110"
+                          ? "border-ink bg-ink text-stock"
+                          : "border-rule-strong text-ink hover:bg-sunk",
                       )}
-                      title={id}
-                    />
+                    >
+                      <span className={cn("block size-3", preview)} aria-hidden="true" />
+                      {label}
+                    </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Content</label>
+                <span className="label mb-2 block">what happens here</span>
                 <RichTextEditor
                   content={content}
                   onChange={setContent}
-                  placeholder="Write your notes here..."
+                  placeholder="Psalm 95:1–3, read together from the screen."
                   className="min-h-[200px]"
                 />
               </div>
@@ -148,13 +142,13 @@ export function SectionNotePanel({ open, onOpenChange, note, isCreator, onSave }
           ) : (
             <>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">{note?.title}</h2>
+                <h2 className="text-xl">{note?.title}</h2>
               </div>
               <div className="text-sm prose prose-sm dark:prose-invert max-w-none">
                 {note?.content ? (
                   <div dangerouslySetInnerHTML={{ __html: note.content }} />
                 ) : (
-                  <p className="text-muted-foreground italic">No content</p>
+                  <p className="text-muted-foreground">Nothing written here yet.</p>
                 )}
               </div>
             </>
@@ -164,7 +158,7 @@ export function SectionNotePanel({ open, onOpenChange, note, isCreator, onSave }
         {isCreator && (
           <SheetFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              cancel
             </Button>
             <Button onClick={handleSave}>Save</Button>
           </SheetFooter>

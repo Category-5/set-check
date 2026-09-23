@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, cleanup } from "@testing-library/react"
+import { render, screen, cleanup, fireEvent } from "@testing-library/react"
 import React from "react"
 
 // Mock DnD kit - components use useSortable which requires DndContext
@@ -79,8 +79,13 @@ beforeEach(() => {
   cleanup()
 })
 
+function openActionsMenu(songTitle: string) {
+  const [trigger] = screen.getAllByRole("button", { name: `More actions for ${songTitle}` })
+  fireEvent.keyDown(trigger, { key: "Enter" })
+}
+
 describe("SongItem — Set song deletion", () => {
-  it("shows Remove song button when user is the playlist creator", () => {
+  it("shows Remove from set menu item when user is the playlist creator", async () => {
     render(
       <SongItem
         song={baseSong}
@@ -93,10 +98,11 @@ describe("SongItem — Set song deletion", () => {
         onEditClick={vi.fn()}
       />
     )
-    expect(screen.getAllByRole("button", { name: "Remove song" }).length).toBeGreaterThan(0)
+    openActionsMenu("Test Song")
+    expect(await screen.findByRole("menuitem", { name: /Remove from set/ })).toBeInTheDocument()
   })
 
-  it("hides Remove song button when user is not the playlist creator", () => {
+  it("hides Remove from set menu item when user is not the playlist creator", () => {
     render(
       <SongItem
         song={baseSong}
@@ -109,14 +115,15 @@ describe("SongItem — Set song deletion", () => {
         onEditClick={vi.fn()}
       />
     )
-    expect(screen.queryAllByRole("button", { name: "Remove song" })).toHaveLength(0)
+    openActionsMenu("Test Song")
+    expect(screen.queryByRole("menuitem", { name: /Remove from set/ })).toBeNull()
   })
 })
 
 describe("IdeaSongItem — Idea promotion", () => {
   const ideaSong: Song = { ...baseSong, is_promoted: false }
 
-  it("shows Promote song button when user is the playlist creator", () => {
+  it("shows the promote control when user is the playlist creator", () => {
     render(
       <IdeaSongItem
         song={ideaSong}
@@ -128,10 +135,12 @@ describe("IdeaSongItem — Idea promotion", () => {
         onSongPromoted={vi.fn()}
       />
     )
-    expect(screen.getAllByRole("button", { name: "Promote song" }).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByRole("button", { name: "Move Test Song into the set" }).length,
+    ).toBeGreaterThan(0)
   })
 
-  it("hides Promote song button when user is not the playlist creator", () => {
+  it("hides the promote control when user is not the playlist creator", () => {
     render(
       <IdeaSongItem
         song={ideaSong}
@@ -143,14 +152,16 @@ describe("IdeaSongItem — Idea promotion", () => {
         onSongPromoted={vi.fn()}
       />
     )
-    expect(screen.queryAllByRole("button", { name: "Promote song" })).toHaveLength(0)
+    expect(
+      screen.queryAllByRole("button", { name: "Move Test Song into the set" }),
+    ).toHaveLength(0)
   })
 })
 
 describe("IdeaSongItem — Idea song deletion", () => {
   const ideaSong: Song = { ...baseSong, is_promoted: false, added_by: "alice" }
 
-  it("shows Remove song button to the user who added the song", () => {
+  it("shows Remove idea menu item to the user who added the song", async () => {
     render(
       <IdeaSongItem
         song={ideaSong}
@@ -162,10 +173,11 @@ describe("IdeaSongItem — Idea song deletion", () => {
         onSongPromoted={vi.fn()}
       />
     )
-    expect(screen.getAllByRole("button", { name: "Remove song" }).length).toBeGreaterThan(0)
+    openActionsMenu("Test Song")
+    expect(await screen.findByRole("menuitem", { name: /Remove idea/ })).toBeInTheDocument()
   })
 
-  it("hides Remove song button from a user who did not add the song and is not the creator", () => {
+  it("hides Remove idea menu item from a user who did not add the song and is not the creator", () => {
     render(
       <IdeaSongItem
         song={ideaSong}
@@ -177,6 +189,7 @@ describe("IdeaSongItem — Idea song deletion", () => {
         onSongPromoted={vi.fn()}
       />
     )
-    expect(screen.queryAllByRole("button", { name: "Remove song" })).toHaveLength(0)
+    openActionsMenu("Test Song")
+    expect(screen.queryByRole("menuitem", { name: /Remove idea/ })).toBeNull()
   })
 })

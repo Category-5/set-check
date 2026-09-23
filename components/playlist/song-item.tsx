@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { GripVertical, Trash2, Music, MoreHorizontal, Share2, Check, FileMusic, Pencil } from "lucide-react"
+import { Trash2, MoreHorizontal, Share2, Check, FileMusic, Pencil } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,19 +27,6 @@ import { VoteButtons } from "./vote-buttons"
 import { createClient } from "@/lib/supabase/client"
 import type { Song } from "@/lib/types"
 
-// Key colors - each musical key gets a distinct color
-const KEY_COLORS: Record<string, { bg: string; text: string }> = {
-  A: { bg: "bg-red-500", text: "text-white" },
-  Bb: { bg: "bg-rose-400", text: "text-white" },
-  B: { bg: "bg-orange-500", text: "text-white" },
-  C: { bg: "bg-yellow-400", text: "text-yellow-900" },
-  D: { bg: "bg-green-500", text: "text-white" },
-  Eb: { bg: "bg-emerald-400", text: "text-white" },
-  E: { bg: "bg-teal-500", text: "text-white" },
-  F: { bg: "bg-blue-500", text: "text-white" },
-  G: { bg: "bg-purple-500", text: "text-white" },
-}
-
 const KEYS = ["A", "Bb", "B", "C", "D", "Eb", "E", "F", "G"]
 
 interface SongItemProps {
@@ -52,17 +39,32 @@ interface SongItemProps {
   onClick: () => void
   onEditClick: () => void
   onSongUpdated?: (song: Song) => void
+  onDemote?: () => void
+  justPromoted?: boolean
 }
 
-export function SongItem({ song, index, playlistId, currentUser, isCreator = false, onRemove, onClick, onEditClick, onSongUpdated }: SongItemProps) {
+export function SongItem({
+  song,
+  index,
+  playlistId,
+  currentUser,
+  isCreator = false,
+  onRemove,
+  onClick,
+  onEditClick,
+  onSongUpdated,
+  onDemote,
+  justPromoted = false,
+}: SongItemProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [currentKey, setCurrentKey] = useState(song.song_key || "C")
   const [copied, setCopied] = useState(false)
   const supabase = createClient()
 
-  const shareUrl = typeof window !== "undefined" 
-    ? `${window.location.origin}/p/${playlistId}?song=${song.id}`
-    : ""
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/p/${playlistId}?song=${song.id}`
+      : ""
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -72,293 +74,239 @@ export function SongItem({ song, index, playlistId, currentUser, isCreator = fal
           text: `Check out "${song.title}" by ${song.artist}`,
           url: shareUrl,
         })
+        return
       } catch {
-        // User cancelled or share failed, fall back to copy
-        handleCopy()
       }
-    } else {
-      handleCopy()
     }
+    handleCopy()
   }
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback for older browsers
       const textArea = document.createElement("textarea")
       textArea.value = shareUrl
       document.body.appendChild(textArea)
       textArea.select()
       document.execCommand("copy")
       document.body.removeChild(textArea)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
     }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const handleKeyClick = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    const currentIndex = KEYS.indexOf(currentKey)
-    const nextIndex = (currentIndex + 1) % KEYS.length
-    const nextKey = KEYS[nextIndex]
-    
+    const nextKey = KEYS[(KEYS.indexOf(currentKey) + 1) % KEYS.length]
     setCurrentKey(nextKey)
-    
-    // Update in database
+
     const { error } = await supabase
       .from("songs")
       .update({ song_key: nextKey })
       .eq("id", song.id)
-    
+
     if (!error && onSongUpdated) {
       onSongUpdated({ ...song, song_key: nextKey })
     }
   }
 
-  const keyColor = KEY_COLORS[currentKey] || KEY_COLORS.C
-  
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: song.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: song.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   }
 
+  const menu = (
+    <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuItem onClick={onEditClick}>
+        <Pencil className="mr-2 h-4 w-4" />
+        Edit note &amp; link
+      </DropdownMenuItem>
+      <DropdownMenuItem onClick={handleShare}>
+        {copied ? (
+          <>
+            <Check className="mr-2 h-4 w-4 text-ballpoint" />
+            Copied
+          </>
+        ) : (
+          <>
+            <Share2 className="mr-2 h-4 w-4" />
+            Copy link
+          </>
+        )}
+      </DropdownMenuItem>
+      {isCreator && onDemote && (
+        <DropdownMenuItem onClick={onDemote}>
+          <svg viewBox="0 0 24 24" className="mr-2 size-4" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Move back to ideas
+        </DropdownMenuItem>
+      )}
+      {isCreator && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-rubric focus:text-rubric"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Remove from set
+          </DropdownMenuItem>
+        </>
+      )}
+    </DropdownMenuContent>
+  )
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group p-2 sm:p-3 rounded-lg bg-card hover:bg-secondary/50 transition-colors ${
-        isDragging ? "opacity-50 shadow-lg z-50" : ""
+      className={`group border-b border-rule bg-stock transition-colors last:border-b-0 hover:bg-sunk ${
+        isDragging ? "opacity-40" : ""
       }`}
     >
-      {/* Main Row */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Drag Handle - Only show for creator */}
-        {isCreator && (
-          <button
-            {...attributes}
-            {...listeners}
-            className="touch-none text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        )}
+      <div className="flex items-start gap-2 px-2 py-2.5 sm:items-center sm:gap-3 sm:px-3">
+        <span
+          {...(isCreator ? { ...attributes, ...listeners } : {})}
+          className={`mt-1 block size-3.5 shrink-0 touch-none sm:mt-0 ${
+            justPromoted ? "animate-promote" : "rounded-full bg-rubric"
+          } ${isCreator ? "cursor-grab active:cursor-grabbing" : ""}`}
+          aria-hidden="true"
+        />
 
-        {/* Index - Hidden on mobile */}
-        <span className="hidden sm:block w-5 text-center text-sm text-muted-foreground">
-          {index + 1}
+        <span className="mt-0.5 w-6 shrink-0 num text-[0.6875rem] tabular-nums text-muted-foreground sm:mt-0">
+          {String(index + 1).padStart(2, "0")}
         </span>
 
-        {/* Thumbnail */}
-        <button
-          onClick={onClick}
-          className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded bg-secondary flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-primary transition-all relative"
-        >
-          {song.thumbnail_url ? (
-            <img
-              src={song.thumbnail_url}
-              alt={song.title}
-              className="w-full h-full object-cover"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <Music className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
-          )}
-          {song.note && (
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-primary ring-1 ring-background" />
-          )}
-        </button>
+        <div className="min-w-0 flex-1">
+          <button
+            onClick={onClick}
+            className="block w-full min-w-0 text-left"
+            aria-label={`Open links for ${song.title}`}
+          >
+            <span className="flex items-center gap-2">
+              <span className="font-display truncate text-sm font-medium leading-tight sm:text-base">{song.title}</span>
+              {song.note && (
+                <span className="label shrink-0 border border-rule px-1 py-0.5 leading-none">
+                  note
+                </span>
+              )}
+            </span>
+            <span className="block truncate text-xs leading-tight text-muted-foreground sm:text-sm">
+              {song.artist}
+              {song.added_by && <span className="sm:hidden"> · {song.added_by}</span>}
+            </span>
+          </button>
 
-        {/* Key Badge */}
-        <button
-          onClick={handleKeyClick}
-          className={`shrink-0 px-1 py-0.5 min-w-[1.1rem] rounded text-[10px] sm:text-xs font-bold leading-none flex items-center justify-center transition-all hover:scale-110 hover:shadow-md ${keyColor.bg} ${keyColor.text}`}
-          title={`Key: ${currentKey} (click to change)`}
-        >
-          {currentKey}
-        </button>
-
-        {/* Info */}
-        <button onClick={onClick} className="flex-1 min-w-0 text-left">
-          <p className="font-medium text-sm sm:text-base text-foreground truncate hover:underline">
-            {song.title}
-          </p>
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{song.artist}</p>
-        </button>
-
-        {/* Added By & At - Hidden on mobile */}
-        <div className="hidden sm:flex flex-col items-end text-xs text-muted-foreground">
-          {song.added_by && (
-            <span className="font-medium">{song.added_by}</span>
-          )}
-          <span>{formatDistanceToNow(new Date(song.added_at), { addSuffix: true })}</span>
+          <div className="mt-2 flex items-center gap-2 sm:hidden">
+            <button
+              onClick={handleKeyClick}
+              className="num h-9 w-10 shrink-0 rounded-[2px] border border-rule text-xs text-muted-foreground transition-colors hover:border-ink hover:text-ink"
+              aria-label={`Key of ${currentKey}. Change key.`}
+            >
+              {currentKey}
+            </button>
+            <VoteButtons songId={song.id} currentUser={currentUser} />
+            {song.external_link && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="text-rubric"
+                aria-label="Open attached link"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.open(song.external_link!, "_blank", "noopener,noreferrer")
+                }}
+              >
+                <FileMusic className="h-4 w-4" />
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`More actions for ${song.title}`}
+                  className="ml-auto text-muted-foreground"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              {menu}
+            </DropdownMenu>
+          </div>
         </div>
 
-        {/* Actions - Hidden on mobile, shown on desktop */}
-        <div className="hidden sm:flex items-center gap-1">
-          {/* Vote Buttons */}
+        <div className="hidden items-center gap-3 sm:flex">
+          <button
+            onClick={handleKeyClick}
+            className="num h-8 w-9 shrink-0 rounded-[2px] border border-rule text-xs text-muted-foreground transition-colors hover:border-ink hover:text-ink"
+            title={`Key of ${currentKey} — tap to change`}
+            aria-label={`Key of ${currentKey}. Change key.`}
+          >
+            {currentKey}
+          </button>
+
+          <span className="flex w-20 flex-col items-end whitespace-nowrap text-xs leading-tight text-muted-foreground">
+            {song.added_by && <span className="max-w-full truncate">{song.added_by}</span>}
+            <span className="num text-[0.625rem]">
+              {formatDistanceToNow(new Date(song.added_at), { addSuffix: true })}
+            </span>
+          </span>
+
           <VoteButtons songId={song.id} currentUser={currentUser} />
 
-          {/* External Link */}
           {song.external_link && (
             <Button
               variant="ghost"
-              size="icon"
-              className="shrink-0 text-primary"
+              size="icon-sm"
+              className="text-rubric"
+              aria-label="Open attached link"
               onClick={(e) => {
                 e.stopPropagation()
                 window.open(song.external_link!, "_blank", "noopener,noreferrer")
               }}
             >
-              <FileMusic className="w-4 h-4" />
+              <FileMusic className="h-4 w-4" />
             </Button>
           )}
 
-          {/* More Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                size="icon-sm"
+                aria-label={`More actions for ${song.title}`}
+                className="text-muted-foreground"
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEditClick}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare}>
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2 text-emerald-500" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Copy link
-                  </>
-                )}
-              </DropdownMenuItem>
-              {isCreator && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Remove Song
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
+            {menu}
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Mobile Actions Row */}
-      <div className="flex sm:hidden items-center justify-between gap-1 mt-2 pt-2 border-t border-border/50">
-        {/* Added By - Mobile */}
-        <div className="text-xs text-muted-foreground">
-          {song.added_by && (
-            <span className="font-medium">{song.added_by}</span>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          {/* Vote Buttons */}
-          <VoteButtons songId={song.id} currentUser={currentUser} />
-
-          {/* External Link */}
-          {song.external_link && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 text-primary"
-              onClick={(e) => {
-                e.stopPropagation()
-                window.open(song.external_link!, "_blank", "noopener,noreferrer")
-              }}
-            >
-              <FileMusic className="w-4 h-4" />
-            </Button>
-          )}
-
-          {/* More Menu - Mobile */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 text-muted-foreground"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEditClick}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare}>
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2 text-emerald-500" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Copy link
-                  </>
-                )}
-              </DropdownMenuItem>
-              {isCreator && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Remove Song
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Delete Confirmation */}
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove song?</AlertDialogTitle>
+            <AlertDialogTitle>Remove {song.title} from the set?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove &quot;{song.title}&quot; from the playlist? This action cannot be undone.
+              This deletes the song from this setlist entirely. To keep it around
+              for later, move it back to ideas instead.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Remove
+            <AlertDialogCancel>Keep it</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onRemove}
+              className="border border-rubric bg-transparent text-rubric hover:bg-rubric hover:text-primary-foreground"
+            >
+              Remove song
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

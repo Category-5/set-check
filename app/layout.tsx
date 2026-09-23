@@ -1,10 +1,20 @@
 import type { Metadata } from 'next'
-import { Rubik } from 'next/font/google'
+import { Archivo, Literata } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const _rubik = Rubik({ subsets: ["latin"] });
+const archivo = Archivo({
+  subsets: ['latin'],
+  variable: '--font-archivo',
+  display: 'swap',
+})
+
+const literata = Literata({
+  subsets: ['latin'],
+  variable: '--font-literata',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -69,11 +79,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${archivo.variable} ${literata.variable}`}>
       <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           storageKey="setcheck-theme"
         >
           {children}

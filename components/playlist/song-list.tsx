@@ -7,10 +7,7 @@ import { PlatformLinksDialog } from "./platform-links-dialog"
 import { SongEditDialog } from "./song-edit-dialog"
 import { createClient } from "@/lib/supabase/client"
 import type { Song, SectionNote, SetItem } from "@/lib/types"
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useDroppable } from "@dnd-kit/core"
 
 interface SongListProps {
@@ -21,11 +18,13 @@ interface SongListProps {
   isCreator?: boolean
   onSongRemoved: (songId: string) => void
   onSongUpdated: (song: Song) => void
+  onSongDemoted?: (song: Song) => void
   onSectionNoteClick?: (note: SectionNote) => void
   onSectionNoteRemoved?: (noteId: string) => void
   onAddSongClick?: () => void
   showAddButton?: boolean
   droppableId?: string
+  recentlyPromotedId?: string | null
 }
 
 export function SongList({
@@ -36,26 +35,32 @@ export function SongList({
   isCreator = false,
   onSongRemoved,
   onSongUpdated,
+  onSongDemoted,
   onSectionNoteClick,
   onSectionNoteRemoved,
-  onAddSongClick,
-  showAddButton = true,
   droppableId,
+  recentlyPromotedId,
 }: SongListProps) {
   const [selectedSong, setSelectedSong] = useState<Song | null>(null)
   const [isPlatformDialogOpen, setIsPlatformDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const supabase = createClient()
 
-  const { setNodeRef, isOver } = useDroppable({
-    id: droppableId || "song-list",
-  })
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId || "song-list" })
 
   const handleRemoveSong = async (songId: string) => {
     const { error } = await supabase.from("songs").delete().eq("id", songId)
+    if (!error) onSongRemoved(songId)
+  }
 
+  const handleDemote = async (song: Song) => {
+    const ideaCount = songs.filter((s) => !s.is_promoted).length
+    const { error } = await supabase
+      .from("songs")
+      .update({ is_promoted: false, position: ideaCount })
+      .eq("id", song.id)
     if (!error) {
-      onSongRemoved(songId)
+      onSongDemoted?.({ ...song, is_promoted: false, position: ideaCount })
     }
   }
 
@@ -78,13 +83,17 @@ export function SongList({
       .eq("id", selectedSong.id)
 
     if (!error) {
-      onSongUpdated({ ...selectedSong, note: data.note || null, external_link: data.externalLink || null })
+      onSongUpdated({
+        ...selectedSong,
+        note: data.note || null,
+        external_link: data.externalLink || null,
+      })
     }
     setIsEditDialogOpen(false)
   }
 
-  const itemsToRender = setItems || songs.map(s => ({ ...s, type: 'song' as const }))
-  const sortableIds = itemsToRender.map(item => item.id)
+  const itemsToRender = setItems || songs.map((s) => ({ ...s, type: "song" as const }))
+  const sortableIds = itemsToRender.map((item) => item.id)
 
   let songIndex = 0
 
@@ -92,12 +101,12 @@ export function SongList({
     <>
       <div
         ref={setNodeRef}
-        className={`min-h-[60px] transition-colors rounded-lg ${isOver ? "bg-primary/10 ring-2 ring-primary ring-dashed" : ""}`}
+        className={`transition-colors ${isOver ? "bg-rubric/6 outline outline-1 outline-rubric" : ""}`}
       >
         <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-1.5 sm:space-y-2">
+          <div>
             {itemsToRender.map((item) => {
-              if (item.type === 'section_note') {
+              if (item.type === "section_note") {
                 return (
                   <SectionNoteItem
                     key={item.id}
@@ -117,10 +126,12 @@ export function SongList({
                   playlistId={playlistId}
                   currentUser={currentUser}
                   isCreator={isCreator}
+                  justPromoted={recentlyPromotedId === item.id}
                   onRemove={() => handleRemoveSong(item.id)}
                   onClick={() => handleSongClick(item)}
                   onEditClick={() => handleEditClick(item)}
                   onSongUpdated={onSongUpdated}
+                  onDemote={onSongDemoted ? () => handleDemote(item) : undefined}
                 />
               )
             })}

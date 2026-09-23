@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { Music } from "lucide-react"
 import Link from "next/link"
-import { Logo } from "@/components/logo"
+import { Wordmark } from "@/components/logo"
 import type { Metadata } from "next"
 import { PlatformButton } from "./platform-button"
 
@@ -30,17 +30,17 @@ interface SharedSong {
   created_at: string
 }
 
-const PLATFORM_INFO: Record<string, { name: string; color: string }> = {
-  spotify: { name: "Spotify", color: "bg-[#1DB954]" },
-  appleMusic: { name: "Apple Music", color: "bg-[#FA243C]" },
-  youtube: { name: "YouTube", color: "bg-[#FF0000]" },
-  youtubeMusic: { name: "YouTube Music", color: "bg-[#FF0000]" },
-  amazonMusic: { name: "Amazon Music", color: "bg-[#00A8E1]" },
-  deezer: { name: "Deezer", color: "bg-[#FEAA2D]" },
-  tidal: { name: "Tidal", color: "bg-[#000000]" },
-  soundcloud: { name: "SoundCloud", color: "bg-[#FF5500]" },
-  pandora: { name: "Pandora", color: "bg-[#005483]" },
-  audiomack: { name: "Audiomack", color: "bg-[#FFA200]" },
+const PLATFORM_INFO: Record<string, { name: string }> = {
+  spotify: { name: "Spotify" },
+  appleMusic: { name: "Apple Music" },
+  youtube: { name: "YouTube" },
+  youtubeMusic: { name: "YouTube Music" },
+  amazonMusic: { name: "Amazon Music" },
+  deezer: { name: "Deezer" },
+  tidal: { name: "Tidal" },
+  soundcloud: { name: "SoundCloud" },
+  pandora: { name: "Pandora" },
+  audiomack: { name: "Audiomack" },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -97,78 +97,88 @@ export default async function SongPage({ params }: { params: Promise<{ id: strin
   const availablePlatforms = Object.entries(links).filter(([, url]) => url)
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto px-4 py-8">
-        <div className="flex justify-center mb-8">
-          <Link href="/">
-            <Logo size={48} />
+    <div className="min-h-screen bg-stock">
+      <header className="border-b border-rule">
+        <div className="mx-auto flex h-14 max-w-lg items-center px-5">
+          <Link href="/" aria-label="Set Check home">
+            <Wordmark size={19} />
           </Link>
         </div>
+      </header>
 
-        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-          {/* Song Info */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="shrink-0 w-20 h-20 rounded-lg bg-secondary flex items-center justify-center overflow-hidden">
-              {sharedSong.thumbnail_url ? (
-                <img
-                  src={sharedSong.thumbnail_url}
-                  alt={sharedSong.title || "Song"}
-                  className="w-full h-full object-cover"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <Music className="w-10 h-10 text-muted-foreground" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="font-semibold text-lg text-foreground truncate">
-                {sharedSong.title || "Unknown Song"}
-              </h1>
-              <p className="text-muted-foreground truncate">
-                {sharedSong.artist || "Unknown Artist"}
-              </p>
-              {sharedSong.album && (
-                <p className="text-sm text-muted-foreground/70 truncate">
-                  {sharedSong.album}
-                </p>
-              )}
-            </div>
+      <main className="mx-auto max-w-lg px-5 py-12">
+        <div className="flex items-start gap-5">
+          <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-rule bg-sunk">
+            {sharedSong.thumbnail_url ? (
+              <img
+                src={sharedSong.thumbnail_url}
+                alt=""
+                className="size-full object-cover"
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <Music className="size-8 text-muted-foreground" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-2xl font-semibold leading-[1.15] tracking-[-0.025em]">
+              {sharedSong.title || "Unknown song"}
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              {sharedSong.artist || "Unknown artist"}
+            </p>
+            {sharedSong.album && (
+              <p className="mt-0.5 text-sm text-muted-foreground">{sharedSong.album}</p>
+            )}
+            <p className="mt-3 text-sm text-muted-foreground">Someone shared this with you.</p>
+          </div>
+        </div>
+
+        <section className="mt-12">
+          <div className="flex items-end justify-between border-b-2 border-rubric pb-2">
+            <h2 className="font-display text-lg font-semibold">Open it in</h2>
+            <span className="num text-[0.6875rem] text-muted-foreground">
+              {String(availablePlatforms.length).padStart(2, "0")}
+            </span>
           </div>
 
-          {/* Platform Links */}
-          <div className="space-y-2">
-            <h2 className="text-sm font-medium text-muted-foreground mb-3">
-              Listen on
-            </h2>
+          <div className="sheet overflow-hidden rounded-t-none border-t-0">
             {availablePlatforms.length > 0 ? (
               availablePlatforms.map(([platform, url]) => {
-                const info = PLATFORM_INFO[platform] || { name: platform, color: "bg-muted" }
+                const info = PLATFORM_INFO[platform] || { name: platform }
                 return (
                   <PlatformButton
                     key={platform}
                     platform={platform}
                     url={url as string}
                     name={info.name}
-                    color={info.color}
                   />
                 )
               })
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No streaming links available
+              <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+                No streaming links were found for this song.
               </p>
             )}
           </div>
-        </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Shared via{" "}
-          <Link href="/" className="text-primary hover:underline">
-            SetCheck
+          <p className="mt-4 text-xs text-muted-foreground">
+            Whichever you use is the right one — this link works the same on all of them.
+          </p>
+        </section>
+
+        <div className="mt-16 border-t border-rule pt-6">
+          <p className="text-sm text-muted-foreground">
+            Building a set with your team?
+          </p>
+          <Link
+            href="/"
+            className="mt-3 inline-flex h-11 items-center rounded-[3px] bg-rubric px-4 text-sm font-medium text-on-rubric shadow-lift transition-[filter] hover:brightness-[1.08]"
+          >
+            make a setlist — free, no account
           </Link>
-        </p>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }

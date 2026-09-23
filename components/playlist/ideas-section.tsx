@@ -1,10 +1,10 @@
 "use client"
 
-import { User } from "lucide-react"
 import { IdeaSongItem } from "./idea-song-item"
 import type { Song } from "@/lib/types"
 import { useDroppable } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { IdeaMark } from "@/components/shapes"
 
 interface IdeasSectionProps {
   ideasByPerson: Record<string, Song[]>
@@ -15,6 +15,7 @@ interface IdeasSectionProps {
   onSongUpdated: (song: Song) => void
   onSongPromoted: (song: Song) => void
   droppableId?: string
+  onAddSongClick?: () => void
 }
 
 export function IdeasSection({
@@ -26,15 +27,13 @@ export function IdeasSection({
   onSongUpdated,
   onSongPromoted,
   droppableId,
+  onAddSongClick,
 }: IdeasSectionProps) {
   const people = Object.keys(ideasByPerson)
-  
-  const { setNodeRef, isOver } = useDroppable({
-    id: droppableId || "ideas-section",
-  })
-  
-  // Sort so current user is first
-  const sortedPeople = people.sort((a, b) => {
+
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId || "ideas-section" })
+
+  const sortedPeople = [...people].sort((a, b) => {
     if (a === currentUser) return -1
     if (b === currentUser) return 1
     return a.localeCompare(b)
@@ -42,38 +41,61 @@ export function IdeasSection({
 
   if (people.length === 0) {
     return (
-      <div 
+      <div
         ref={setNodeRef}
-        className={`rounded-xl border border-dashed bg-card/30 p-6 sm:p-8 text-center transition-colors ${isOver ? "border-primary bg-primary/10" : "border-border"}`}
+        className={`rounded-[3px] border border-dashed px-6 py-12 text-center transition-colors ${
+          isOver ? "border-ballpoint bg-ballpoint/8" : "border-rule-strong"
+        }`}
       >
-        <p className="text-sm sm:text-base text-muted-foreground">
-          {isOver ? "Drop here to move to Ideas" : "No ideas yet. Add a song to start sharing your picks!"}
-        </p>
+        {isOver ? (
+          <p className="text-sm text-ballpoint">drop here to move back to ideas</p>
+        ) : (
+          <>
+            <span className="mx-auto flex w-fit items-center gap-2">
+              <IdeaMark size={12} />
+              <IdeaMark size={12} tone="var(--rule-strong)" />
+              <IdeaMark size={12} tone="var(--rule-strong)" />
+            </span>
+            <p className="mx-auto mt-5 max-w-[38ch] text-sm text-muted-foreground">
+              No ideas yet. Add a song yourself, or send the link to your team and
+              let them bring the first one.
+            </p>
+            {onAddSongClick && (
+              <button
+                onClick={onAddSongClick}
+                className="mt-5 h-10 cursor-pointer rounded-[3px] border border-rule-strong bg-sheet px-4 text-sm shadow-lift transition-colors hover:border-ballpoint hover:bg-ballpoint hover:text-on-ballpoint"
+              >
+                Add a song
+              </button>
+            )}
+          </>
+        )}
       </div>
     )
   }
 
   return (
-    <div 
+    <div
       ref={setNodeRef}
-      className={`space-y-4 sm:space-y-6 rounded-xl transition-colors ${isOver ? "ring-2 ring-primary ring-dashed bg-primary/5" : ""}`}
+      className={`transition-colors ${isOver ? "bg-ballpoint/6 outline outline-1 outline-ballpoint" : ""}`}
     >
       {sortedPeople.map((person) => (
-        <div key={person} className="rounded-xl border border-border bg-card/30 p-2 sm:p-4">
-          <div className="mb-2 sm:mb-3 flex items-center gap-2">
-            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-accent">
-              <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-accent-foreground" />
-            </div>
-            <h3 className="text-sm sm:text-base font-semibold text-foreground">
-              {person === currentUser ? `${person} (You)` : person}&apos;s Ideas
+        <section key={person} className="sheet mb-4 overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-rule bg-sunk px-3 py-2.5">
+            <IdeaMark size={10} />
+            <h3 className="text-sm font-medium">
+              {person === currentUser ? `${person} — you` : person}
             </h3>
-            <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-              {ideasByPerson[person].length}
+            <span className="ml-auto num text-[0.6875rem] tabular-nums text-muted-foreground">
+              {String(ideasByPerson[person].length).padStart(2, "0")}
             </span>
           </div>
-          
-          <SortableContext items={ideasByPerson[person].map(s => s.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-1.5 sm:space-y-2">
+
+          <SortableContext
+            items={ideasByPerson[person].map((s) => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div>
               {ideasByPerson[person].map((song) => (
                 <IdeaSongItem
                   key={song.id}
@@ -88,7 +110,7 @@ export function IdeasSection({
               ))}
             </div>
           </SortableContext>
-        </div>
+        </section>
       ))}
     </div>
   )
