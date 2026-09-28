@@ -64,11 +64,28 @@ describe("searchSpotifyTrack", () => {
     vi.stubEnv("SPOTIFY_CLIENT_ID", "id")
     vi.stubEnv("SPOTIFY_CLIENT_SECRET", "secret")
     mockToken()
-    mockSearch([{ external_urls: { spotify: "https://open.spotify.com/track/abc" } }])
+    mockSearch([
+      { name: "Song", artists: [{ name: "Artist" }], external_urls: { spotify: "https://open.spotify.com/track/abc" } },
+    ])
 
     const { searchSpotifyTrack } = await importSpotify()
     const result = await searchSpotifyTrack("Song", "Artist")
     expect(result).toBe("https://open.spotify.com/track/abc")
+  })
+
+  it("skips results by a different artist or recording", async () => {
+    vi.stubEnv("SPOTIFY_CLIENT_ID", "id")
+    vi.stubEnv("SPOTIFY_CLIENT_SECRET", "secret")
+    mockToken()
+    mockSearch([
+      { name: "Say", artists: [{ name: "Marlon Asher" }], external_urls: { spotify: "https://open.spotify.com/track/wrong" } },
+      { name: "Say - VIP Mix", artists: [{ name: "Asher" }], external_urls: { spotify: "https://open.spotify.com/track/vip" } },
+      { name: "Say", artists: [{ name: "Asher" }], external_urls: { spotify: "https://open.spotify.com/track/right" } },
+    ])
+
+    const { searchSpotifyTrack } = await importSpotify()
+    const result = await searchSpotifyTrack("Say", "Asher")
+    expect(result).toBe("https://open.spotify.com/track/right")
   })
 
   it("strips parenthetical/bracket qualifiers and uses primary artist before searching", async () => {
@@ -101,7 +118,9 @@ describe("ensureSpotifyLink", () => {
     vi.stubEnv("SPOTIFY_CLIENT_ID", "id")
     vi.stubEnv("SPOTIFY_CLIENT_SECRET", "secret")
     mockToken()
-    mockSearch([{ external_urls: { spotify: "https://open.spotify.com/track/new" } }])
+    mockSearch([
+      { name: "Song", artists: [{ name: "Artist" }], external_urls: { spotify: "https://open.spotify.com/track/new" } },
+    ])
 
     const { ensureSpotifyLink } = await importSpotify()
     const links: Record<string, string> = { apple: "https://music.apple.com/..." }

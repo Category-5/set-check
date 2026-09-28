@@ -285,4 +285,97 @@ describe("searchAppleMusicTrack normalization", () => {
     expect(searchCall).not.toContain("Remastered")
     expect(searchCall).not.toContain("Guest")
   })
+
+  it("skips results whose title or artist does not match", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        results: [
+          { kind: "song", trackName: "Say It Right", artistName: "Asher", trackViewUrl: "https://music.apple.com/wrong" },
+          { kind: "song", trackName: "Say", artistName: "Asher Postman", trackViewUrl: "https://music.apple.com/right" },
+        ],
+      }),
+    })
+
+    const { searchAppleMusicTrack } = await import("@/lib/apple-music")
+    const result = await searchAppleMusicTrack("Say", "Asher Postman")
+    expect(result).toBe("https://music.apple.com/right")
+  })
+
+  it("returns null when nothing matches", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        results: [
+          { kind: "song", trackName: "Other Song", artistName: "Artist", trackViewUrl: "https://music.apple.com/wrong" },
+        ],
+      }),
+    })
+
+    const { searchAppleMusicTrack } = await import("@/lib/apple-music")
+    expect(await searchAppleMusicTrack("Song", "Artist")).toBeNull()
+  })
+})
+
+describe("resolveSpotifyPlaylist album details", () => {
+  function embedPage(trackList: unknown[]): string {
+    const nextData = {
+      props: { pageProps: { state: { data: { entity: { name: "My Mix", trackList } } } } },
+    }
+    return `<html><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></html>`
+  }
+
+  it("fills album and artwork from the tracks API since the embed omits them", async () => {
+    vi.stubEnv("SPOTIFY_CLIENT_ID", "id")
+    vi.stubEnv("SPOTIFY_CLIENT_SECRET", "secret")
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => embedPage([{ uri: "spotify:track:abc123", title: "Song One", subtitle: "Artist One" }]),
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ access_token: "token", expires_in: 3600 }),
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        tracks: [
+          {
+            id: "abc123",
+            album: { name: "Album One", images: [{ url: "https://img/640.jpg" }, { url: "https://img/300.jpg" }] },
+          },
+        ],
+      }),
+    })
+
+    const { resolveSpotifyPlaylist } = await import("@/lib/spotify")
+    const result = await resolveSpotifyPlaylist("https://open.spotify.com/playlist/xyz")
+
+    expect(result?.tracks).toEqual([
+      {
+        title: "Song One",
+        artistName: "Artist One",
+        album: "Album One",
+        thumbnailUrl: "https://img/300.jpg",
+        url: "https://open.spotify.com/track/abc123",
+      },
+    ])
+    const batchCall = mockFetch.mock.calls[2][0] as string
+    expect(batchCall).toContain("/v1/tracks?ids=abc123")
+  })
+
+  it("returns the embed data unchanged when credentials are missing", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      text: async () => embedPage([{ uri: "spotify:track:abc123", title: "Song One", subtitle: "Artist One" }]),
+    })
+
+    const { resolveSpotifyPlaylist } = await import("@/lib/spotify")
+    const result = await resolveSpotifyPlaylist("https://open.spotify.com/playlist/xyz")
+
+    expect(result?.tracks[0].album).toBeNull()
+    expect(result?.tracks[0].thumbnailUrl).toBeNull()
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
 })

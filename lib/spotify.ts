@@ -1,7 +1,7 @@
 // Spotify Web API helper using Client Credentials Flow.
 // Used as a fallback to fill in a Spotify link when resolving from Apple Music or Tidal.
 
-import { normalizeForSearch, primaryArtist } from "./search-normalization"
+import { normalizeForSearch, pickBestMatch, primaryArtist } from "./search-normalization"
 import type { ResolvedPlaylist, ResolvedPlaylistTrack } from "./types"
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token"
@@ -134,7 +134,7 @@ export async function searchSpotifyTrack(
   if (!cleanTitle || !cleanArtist) return null
 
   const q = `track:${cleanTitle} artist:${cleanArtist}`
-  const url = `${SEARCH_URL}?q=${encodeURIComponent(q)}&type=track&limit=1&market=US`
+  const url = `${SEARCH_URL}?q=${encodeURIComponent(q)}&type=track&limit=10&market=US`
 
   try {
     const response = await fetch(url, {
@@ -147,9 +147,16 @@ export async function searchSpotifyTrack(
     }
 
     const data = (await response.json()) as {
-      tracks?: { items?: { external_urls?: { spotify?: string } }[] }
+      tracks?: {
+        items?: { name: string; artists: { name: string }[]; external_urls?: { spotify?: string } }[]
+      }
     }
-    return data.tracks?.items?.[0]?.external_urls?.spotify ?? null
+    const candidates = (data.tracks?.items ?? []).map((item) => ({
+      title: item.name,
+      artists: item.artists.map((a) => a.name),
+      url: item.external_urls?.spotify,
+    }))
+    return pickBestMatch(candidates, title, artist)?.url ?? null
   } catch (error) {
     console.error("[spotify] Search error:", error)
     return null
@@ -283,6 +290,62 @@ export function parseSpotifyEmbedPlaylist(embedHtml: string): ResolvedPlaylist |
   }
 }
 
+const TRACK_BATCH_SIZE = 50
+
+// The embed page's trackList carries no album or artwork fields, so batch
+// them in from the official tracks endpoint (which Client Credentials Flow
+// does allow, unlike playlist tracks).
+async function fillAlbumDetails(playlist: ResolvedPlaylist): Promise<ResolvedPlaylist> {
+  const token = await getAccessToken()
+  if (!token) return playlist
+
+  const ids = playlist.tracks
+    .map((track) => extractTrackId(track.url))
+    .filter((id): id is string => Boolean(id))
+  if (ids.length === 0) return playlist
+
+  const detailsById = new Map<string, { album: string | null; thumbnailUrl: string | null }>()
+
+  for (let i = 0; i < ids.length; i += TRACK_BATCH_SIZE) {
+    const batch = ids.slice(i, i + TRACK_BATCH_SIZE)
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/tracks?ids=${batch.join(",")}&market=US`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!response.ok) {
+        console.error(`[spotify] Track batch lookup failed: ${response.status}`)
+        continue
+      }
+
+      const body = (await response.json()) as {
+        tracks?: ({
+          id: string
+          album?: { name?: string; images?: { url: string }[] }
+        } | null)[]
+      }
+      for (const track of body.tracks ?? []) {
+        if (!track) continue
+        detailsById.set(track.id, {
+          album: track.album?.name ?? null,
+          thumbnailUrl: track.album?.images?.[1]?.url ?? track.album?.images?.[0]?.url ?? null,
+        })
+      }
+    } catch (error) {
+      console.error("[spotify] Track batch lookup error:", error)
+    }
+  }
+
+  for (const track of playlist.tracks) {
+    const details = detailsById.get(extractTrackId(track.url) ?? "")
+    if (!details) continue
+    track.album = track.album ?? details.album
+    track.thumbnailUrl = track.thumbnailUrl ?? details.thumbnailUrl
+  }
+
+  return playlist
+}
+
 // Resolve a public Spotify playlist without authentication via the embed
 // page, which serializes the full track list into __NEXT_DATA__. The
 // official API refuses playlist tracks under Client Credentials Flow.
@@ -300,7 +363,10 @@ export async function resolveSpotifyPlaylist(url: string): Promise<ResolvedPlayl
     })
     if (!response.ok) return null
 
-    return parseSpotifyEmbedPlaylist(await response.text())
+    const playlist = parseSpotifyEmbedPlaylist(await response.text())
+    if (!playlist) return null
+
+    return fillAlbumDetails(playlist)
   } catch (error) {
     console.error("[spotify] Playlist lookup error:", error)
     return null

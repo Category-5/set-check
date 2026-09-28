@@ -1,7 +1,7 @@
 // Apple Music / iTunes API helpers.
 // The iTunes Search and Lookup APIs are public and require no key.
 
-import { normalizeForSearch, primaryArtist } from "./search-normalization"
+import { normalizeForSearch, pickBestMatch, primaryArtist } from "./search-normalization"
 import type { ResolvedPlaylist, ResolvedPlaylistTrack } from "./types"
 
 const ITUNES_SEARCH_URL = "https://itunes.apple.com/search"
@@ -80,7 +80,7 @@ export async function searchAppleMusicTrack(
   try {
     const q = `${normalizeForSearch(title)} ${normalizeForSearch(primaryArtist(artist))}`.trim()
     if (!q) return null
-    const searchUrl = `${ITUNES_SEARCH_URL}?term=${encodeURIComponent(q)}&media=music&entity=song&limit=5`
+    const searchUrl = `${ITUNES_SEARCH_URL}?term=${encodeURIComponent(q)}&media=music&entity=song&limit=25`
 
     const response = await fetch(searchUrl)
     if (!response.ok) return null
@@ -88,12 +88,16 @@ export async function searchAppleMusicTrack(
     const data = (await response.json()) as {
       results: Array<{
         kind?: string
+        trackName?: string
+        artistName?: string
         trackViewUrl?: string
       }>
     }
 
-    const item = data.results?.find((r) => r.kind === "song")
-    return item?.trackViewUrl ?? null
+    const candidates = (data.results ?? [])
+      .filter((r) => r.kind === "song" && r.trackViewUrl)
+      .map((r) => ({ title: r.trackName ?? "", artists: [r.artistName ?? ""], url: r.trackViewUrl! }))
+    return pickBestMatch(candidates, title, artist)?.url ?? null
   } catch {
     return null
   }

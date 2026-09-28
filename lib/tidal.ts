@@ -1,7 +1,7 @@
 // Tidal API v2 helpers using the OAuth Client Credentials flow.
 // Used to resolve Tidal track links directly.
 
-import { normalizeForSearch, primaryArtist } from "./search-normalization"
+import { normalizeForSearch, pickBestMatch, primaryArtist } from "./search-normalization"
 import type { ResolvedPlaylist, ResolvedPlaylistTrack } from "./types"
 
 const TOKEN_URL = "https://auth.tidal.com/v1/oauth2/token"
@@ -157,15 +157,28 @@ export async function resolveTidalUrl(url: string): Promise<TidalResolvedTrack |
 }
 
 interface SearchResultsResponse {
+  data?: {
+    relationships?: {
+      tracks?: { data?: { id: string; type: string }[] }
+    }
+  }[]
   included?: {
     id: string
     type: string
     attributes?: {
+      title?: string
+      version?: string | null
       externalLinks?: { href: string; meta?: { type: string } }[]
+    }
+    relationships?: {
+      artists?: { data?: { id: string; type: string }[] }
     }
   }[]
 }
 
+// The search response lists tracks in relevance order only in
+// data[0].relationships.tracks; `included` is unordered. Walk the ranked
+// list and return the best track whose title, version, and artist match.
 export async function searchTidalTrack(title: string, artist: string): Promise<string | null> {
   const token = await getAccessToken()
   if (!token) return null
@@ -178,7 +191,7 @@ export async function searchTidalTrack(title: string, artist: string): Promise<s
 
   try {
     const response = await fetch(
-      `${API_BASE}/searchResults?filter%5Bquery%5D=${query}&countryCode=US&include=tracks`,
+      `${API_BASE}/searchResults?filter%5Bquery%5D=${query}&countryCode=US&include=tracks,tracks.artists`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -189,13 +202,35 @@ export async function searchTidalTrack(title: string, artist: string): Promise<s
     if (!response.ok) return null
 
     const data = (await response.json()) as SearchResultsResponse
-    const track = data.included?.find((item) => item.type === "tracks")
-    if (!track) return null
+    const included = data.included ?? []
 
-    const sharingLink = track.attributes?.externalLinks?.find(
-      (link) => link.meta?.type === "TIDAL_SHARING"
+    const tracksById = new Map(
+      included.filter((item) => item.type === "tracks").map((item) => [item.id, item])
     )
-    return sharingLink?.href ?? null
+    const artistNamesById = new Map(
+      included
+        .filter((item) => item.type === "artists")
+        .map((item) => [item.id, (item.attributes as { name?: string } | undefined)?.name ?? ""])
+    )
+
+    const candidates = (data.data?.[0]?.relationships?.tracks?.data ?? []).flatMap((ref) => {
+      const track = tracksById.get(ref.id)
+      if (!track) return []
+      return [
+        {
+          title: track.attributes?.title ?? "",
+          version: track.attributes?.version ?? undefined,
+          artists: (track.relationships?.artists?.data ?? [])
+            .map((artistRef) => artistNamesById.get(artistRef.id) ?? "")
+            .filter(Boolean),
+          sharingUrl: track.attributes?.externalLinks?.find(
+            (link) => link.meta?.type === "TIDAL_SHARING"
+          )?.href ?? `https://tidal.com/browse/track/${track.id}`,
+        },
+      ]
+    })
+
+    return pickBestMatch(candidates, title, artist)?.sharingUrl ?? null
   } catch (error) {
     console.error("[tidal] Search error:", error)
     return null
