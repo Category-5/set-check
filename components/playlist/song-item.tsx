@@ -33,14 +33,17 @@ const KEY_COLORS: Record<string, { bg: string; text: string }> = {
   Bb: { bg: "bg-rose-400", text: "text-white" },
   B: { bg: "bg-orange-500", text: "text-white" },
   C: { bg: "bg-yellow-400", text: "text-yellow-900" },
+  Db: { bg: "bg-lime-400", text: "text-lime-900" },
   D: { bg: "bg-green-500", text: "text-white" },
   Eb: { bg: "bg-emerald-400", text: "text-white" },
   E: { bg: "bg-teal-500", text: "text-white" },
   F: { bg: "bg-blue-500", text: "text-white" },
+  Gb: { bg: "bg-indigo-400", text: "text-white" },
   G: { bg: "bg-purple-500", text: "text-white" },
+  Ab: { bg: "bg-fuchsia-400", text: "text-white" },
 }
 
-const KEYS = ["A", "Bb", "B", "C", "D", "Eb", "E", "F", "G"]
+const KEYS = ["A", "Bb", "B", "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab"]
 
 interface SongItemProps {
   song: Song
