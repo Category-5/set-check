@@ -1,0 +1,26 @@
+[Unit]
+Description=Set Check (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=setcheck
+Group=setcheck
+# Resolved at start, so a restart picks up the new `current` symlink.
+WorkingDirectory=/srv/setcheck/current
+Environment=NODE_ENV=production
+EnvironmentFile=/srv/setcheck/shared/.env
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+Restart=always
+RestartSec=5
+
+MemoryMax=1536M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/setcheck
+
+[Install]
+WantedBy=multi-user.target

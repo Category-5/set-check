@@ -4,9 +4,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v
 
 ## Built with v0
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo.
 
 [Continue working on v0 →](https://v0.app/chat/projects/prj_HAmDZluTS81E7EjnfR1LXOsdeDoA)
+
+## Hosting
+
+Production is moving from Vercel to Redbox behind a Cloudflare Tunnel, deploying `main` nightly. See [deploy/README.md](deploy/README.md). Copy `.env.example` to `.env.local` for development.
 
 ## Getting Started
 

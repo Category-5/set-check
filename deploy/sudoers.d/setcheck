@@ -1,0 +1,2 @@
+# Install with: sudo install -m 0440 deploy/sudoers.d/setcheck /etc/sudoers.d/setcheck && sudo visudo -c
+setcheck ALL=(root) NOPASSWD: /usr/bin/systemctl restart setcheck.service

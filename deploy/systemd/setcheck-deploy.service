@@ -1,0 +1,14 @@
+[Unit]
+Description=Deploy the latest Set Check main
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=setcheck
+Group=setcheck
+Environment=NODE_OPTIONS=--max-old-space-size=2048
+ExecStart=/srv/setcheck/current/deploy/deploy.sh
+# The script restarts setcheck.service via a narrow sudoers rule
+# (deploy/sudoers.d/setcheck), so NoNewPrivileges must stay off here.
+TimeoutStartSec=30min

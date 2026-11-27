@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Rubik } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { PageViewTracker } from '@/components/page-view-tracker'
 import './globals.css'
 
 const _rubik = Rubik({ subsets: ["latin"] });
@@ -78,7 +78,7 @@ export default function RootLayout({
         >
           {children}
         </ThemeProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NODE_ENV === 'production' && <PageViewTracker />}
       </body>
     </html>
   )

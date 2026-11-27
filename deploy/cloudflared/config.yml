@@ -1,0 +1,15 @@
+# /etc/cloudflared/config.yml inside the setcheck container.
+# Replace TUNNEL_ID with the id from `cloudflared tunnel create setcheck`.
+tunnel: TUNNEL_ID
+credentials-file: /etc/cloudflared/TUNNEL_ID.json
+# QUIC uses UDP 7844, which office firewalls often block; HTTP/2 rides TCP 443.
+protocol: http2
+
+ingress:
+  - hostname: staging.setcheck.app
+    service: http://127.0.0.1:3000
+  - hostname: setcheck.app
+    service: http://127.0.0.1:3000
+  - hostname: www.setcheck.app
+    service: http://127.0.0.1:3000
+  - service: http_status:404
