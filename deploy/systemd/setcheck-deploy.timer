@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly Set Check deploy check
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 America/New_York
+RandomizedDelaySec=15m
+# Run on boot if the box was off at 03:30.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
