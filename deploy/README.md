@@ -108,11 +108,17 @@ resolver at `1.1.1.1` instead.
 
 ```sh
 incus exec setcheck -- bash
-pacman -Syu --noconfirm git nodejs-lts-jod pnpm curl cloudflared sudo
+pacman -Syu --noconfirm git nodejs pnpm curl cloudflared sudo
+node -v   # must match .node-version (26.x)
 
 useradd --system --create-home --home-dir /srv/setcheck --shell /bin/bash setcheck
 sudo -u setcheck mkdir -p /srv/setcheck/{releases,shared}
 ```
+
+Arch's `nodejs` package follows the newest Node release, so a later
+`pacman -Syu` can move it past 26. To stay on the LTS line, add `nodejs` to
+`IgnorePkg` in `/etc/pacman.conf`, or switch to Arch's LTS package for Node 26
+once there is one.
 
 Give Redbox read-only access to the private repo with a deploy key:
 
